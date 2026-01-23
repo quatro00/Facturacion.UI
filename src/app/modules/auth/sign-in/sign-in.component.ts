@@ -18,6 +18,7 @@ import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { AuthService } from 'app/core/auth/auth.service';
 import { NavigationMockApi } from 'app/mock-api/common/navigation/api';
+import { Cliente_AuthService } from 'app/services/cliente/cliente_auth.service';
 
 @Component({
     selector: 'auth-sign-in',
@@ -52,7 +53,7 @@ export class AuthSignInComponent implements OnInit {
      */
     constructor(
         private _activatedRoute: ActivatedRoute,
-        private _authService: AuthService,
+        private _authService: Cliente_AuthService,
         private _formBuilder: UntypedFormBuilder,
         private _router: Router,
         private navigationMockApiService: NavigationMockApi
@@ -104,7 +105,7 @@ export class AuthSignInComponent implements OnInit {
 
         // Sign in
         console.log(this.signInForm.value);
-        this._authService.signIn(this.signInForm.value).subscribe(
+        this._authService.Login(this.signInForm.value).subscribe(
             () => {
                 // Set the redirect url.
                 // The '/signed-in-redirect' is a dummy url to catch the request and redirect the user
@@ -131,7 +132,7 @@ export class AuthSignInComponent implements OnInit {
                 // Set the alert
                 this.alert = {
                     type: 'error',
-                    message: 'Wrong email or password',
+                    message: response.error,
                 };
 
                 // Show the alert

@@ -17,6 +17,7 @@ import { Router, RouterLink } from '@angular/router';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { AuthService } from 'app/core/auth/auth.service';
+import { Cliente_AuthService } from 'app/services/cliente/cliente_auth.service';
 
 @Component({
     selector: 'auth-sign-up',
@@ -52,7 +53,8 @@ export class AuthSignUpComponent implements OnInit {
     constructor(
         private _authService: AuthService,
         private _formBuilder: UntypedFormBuilder,
-        private _router: Router
+        private _router: Router,
+        private _clienteService: Cliente_AuthService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -65,11 +67,12 @@ export class AuthSignUpComponent implements OnInit {
     ngOnInit(): void {
         // Create the form
         this.signUpForm = this._formBuilder.group({
+            username: ['', Validators.required],
             name: ['', Validators.required],
             email: ['', [Validators.required, Validators.email]],
+            confirmEmail: ['', [Validators.required, Validators.email]],
             password: ['', Validators.required],
-            company: [''],
-            agreements: ['', Validators.requiredTrue],
+            terminosCondiciones: ['', Validators.requiredTrue]
         });
     }
 
@@ -81,11 +84,13 @@ export class AuthSignUpComponent implements OnInit {
      * Sign up
      */
     signUp(): void {
+        console.log(1);
         // Do nothing if the form is invalid
         if (this.signUpForm.invalid) {
+            console.log(2);
             return;
         }
-
+        console.log(3);
         // Disable the form
         this.signUpForm.disable();
 
@@ -93,7 +98,7 @@ export class AuthSignUpComponent implements OnInit {
         this.showAlert = false;
 
         // Sign up
-        this._authService.signUp(this.signUpForm.value).subscribe(
+        this._clienteService.registro(this.signUpForm.value).subscribe(
             (response) => {
                 // Navigate to the confirmation required page
                 this._router.navigateByUrl('/confirmation-required');
@@ -103,12 +108,12 @@ export class AuthSignUpComponent implements OnInit {
                 this.signUpForm.enable();
 
                 // Reset the form
-                this.signUpNgForm.resetForm();
-
+                //this.signUpNgForm.resetForm();
+                console.log(response);
                 // Set the alert
                 this.alert = {
                     type: 'error',
-                    message: 'Something went wrong, please try again.',
+                    message: response.error,
                 };
 
                 // Show the alert

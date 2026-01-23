@@ -12,13 +12,14 @@
                 Ingresar2
             </div>
 
-
-
-
-            <!-- Alert -->
-            <fuse-alert class="mt-8" [appearance]="'outline'" [showIcon]="false" [type]="'info'">
-                Para solicitar una cuenta, favor de contactar a <strong>Administrador del sistema</strong>
-            </fuse-alert>
+            <div class="mt-0.5 flex items-baseline font-medium">
+                <div>No tienes una cuenta?</div>
+                <a
+                    class="ml-1 text-primary-500 hover:underline"
+                    [routerLink]="['/sign-up']"
+                    >Registrate
+                </a>
+            </div>
 
             <!-- Alert -->
             @if (showAlert) {
