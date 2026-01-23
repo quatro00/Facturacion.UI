@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">tickets umae25</string>
+    <string name="title_activity_main">tickets umae25</string>
+    <string name="package_name">com.ticketsumae25.app</string>
+    <string name="custom_url_scheme">com.ticketsumae25.app</string>
+</resources>

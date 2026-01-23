@@ -1,0 +1,76 @@
+<div class="flex min-w-0 flex-auto flex-col">
+    <div class="-mt-px flex-auto border-t pt-4 sm:pt-6">
+        <div class="mx-auto w-full max-w-screen-xl">
+            <div>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Nuevos -->
+                    <div
+                        class="rounded-2xl bg-white dark:bg-card p-6 shadow hover:shadow-md hover:scale-[1.01] transition-all duration-200">
+                        <div class="text-sm font-medium text-red-600 dark:text-red-500 mb-1">Nuevos</div>
+                        <div class="flex items-center gap-2 text-5xl font-bold text-red-500 tracking-tight">
+                            {{nuevos}}
+                            <mat-icon fontIcon="mark_email_unread" class="text-4xl text-red-400"></mat-icon>
+                        </div>
+                        <div class="mt-2 text-xs text-muted-foreground">Tickets recién creados sin asignación</div>
+                    </div>
+
+                    <!-- Asignados -->
+                    <div
+                        class="rounded-2xl bg-white dark:bg-card p-6 shadow hover:shadow-md hover:scale-[1.01] transition-all duration-200">
+                        <div class="text-sm font-medium text-blue-600 dark:text-blue-500 mb-1">Asignados</div>
+                        <div class="flex items-center gap-2 text-5xl font-bold text-blue-500 tracking-tight">
+                            {{asignados}}
+                            <mat-icon fontIcon="assignment_ind" class="text-4xl text-blue-400"></mat-icon>
+                        </div>
+                        <div class="mt-2 text-xs text-muted-foreground">Tickets en seguimiento activo</div>
+                    </div>
+
+                    <!-- En espera -->
+                    <div
+                        class="rounded-2xl bg-white dark:bg-card p-6 shadow hover:shadow-md hover:scale-[1.01] transition-all duration-200">
+                        <div class="text-sm font-medium text-amber-600 dark:text-amber-500 mb-1">En espera</div>
+                        <div class="flex items-center gap-2 text-5xl font-bold text-amber-500 tracking-tight">
+                            {{enEspera}}
+                            <mat-icon fontIcon="schedule" class="text-4xl text-amber-400"></mat-icon>
+                        </div>
+                        <div class="mt-2 text-xs text-muted-foreground">Tickets detenidos o pendientes</div>
+                    </div>
+
+                    <!-- Concluidos -->
+                    <div
+                        class="rounded-2xl bg-white dark:bg-card p-6 shadow hover:shadow-md hover:scale-[1.01] transition-all duration-200">
+                        <div class="text-sm font-medium text-green-600 dark:text-green-500 mb-1">Por confirmar</div>
+                        <div class="flex items-center gap-2 text-5xl font-bold text-green-500 tracking-tight">
+                            {{porConfirmar}}
+                            <mat-icon fontIcon="check_circle" class="text-4xl text-green-400"></mat-icon>
+                        </div>
+                        <div class="mt-2 text-xs text-muted-foreground">En espera de confirmación por el solicitante</div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="mt-6 w-full" *ngIf="muestraGraficaMensual == true">
+                <app-barra-tickets-area-meses
+                    *ngIf="graficaMensual?.meses?.length > 0 && graficaMensual?.detalle?.length > 0"
+    [etiquetas]="graficaMensual.meses"
+    [series]="graficaMensual.detalle"
+                ></app-barra-tickets-area-meses>
+            </div>
+            <div class="mt-6 grid w-full grid-cols-1 gap-8 sm:grid-cols-2 md:mt-8 lg:grid-cols-4">
+
+                <app-dona-tickets-area [titulo]="'Quirofano'"
+                    [etiquetas]="['Nuevo', 'Asignado', 'En esera', 'Por confirmar', 'Resuelto']"
+                    [porcentajes]="[10, 15, 20, 20, 35]" [total]="150"></app-dona-tickets-area>
+
+
+
+            </div>
+
+        </div>
+
+
+    </div>
+</div>

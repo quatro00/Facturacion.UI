@@ -1,0 +1,115 @@
+<div class="flex w-full flex-auto flex-col">
+
+    <!-- Main -->
+    <!-- CONTENT GOES HERE -->
+    <div
+        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+        <!-- Loader -->
+        @if (isLoading) {
+        <div class="absolute inset-x-0 bottom-0">
+            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+        </div>
+        }
+        <!-- Title -->
+        <div>
+            <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+                Equipos de trabajo
+            </h2>
+        </div>
+        <!-- Actions -->
+        <div class="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <!-- Select de Organización -->
+            <mat-form-field class="fuse-mat-dense min-w-64 sm:mr-4" style="flex: 1;">
+                <mat-label>Organización</mat-label>
+                <mat-select [formControl]="organizacionControl" (selectionChange)="onOrganizacionChange($event.value)">
+                    <mat-option [value]="'0'">Todas</mat-option>
+                    <mat-option *ngFor="let org of organizaciones" [value]="org.id">
+                        {{ org.nombre }}
+                    </mat-option>
+
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Búsqueda -->
+            <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" [subscriptSizing]="'dynamic'">
+                <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                <input matInput [formControl]="searchInputControl" [autocomplete]="'off'" [placeholder]="'Buscar'" />
+            </mat-form-field>
+
+            <!-- Botón de nuevo -->
+            <button class="sm:ml-4" mat-flat-button color="primary" (click)="nueva()">
+                <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                <span class="ml-2 mr-1">Nuevo</span>
+            </button>
+        </div>
+
+        <!-- Tabla de Organizaciones -->
+    </div>
+
+    <div class="p-4">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3 ">
+            <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+                <!-- Recent transactions table -->
+                <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+                    <div class="mx-6 overflow-x-auto">
+                        <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 w-full" *ngIf="!isLoading">
+                            <!-- Nombre Column -->
+                            <ng-container matColumnDef="organizacion">
+                                <th mat-header-cell *matHeaderCellDef>Organización</th>
+                                <td mat-cell *matCellDef="let element">{{ element.organizacion }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="nombre">
+                                <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                                <td mat-cell *matCellDef="let element">{{ element.nombre }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="supervisor">
+                                <th mat-header-cell *matHeaderCellDef>Supervisor</th>
+                                <td mat-cell *matCellDef="let element">
+                                    {{ element.supervisor }}
+                                </td>
+                            </ng-container>
+
+
+
+                            <ng-container matColumnDef="acciones">
+                                <th mat-header-cell *matHeaderCellDef></th>
+                                <td mat-cell *matCellDef="let org">
+                                    <div class="flex items-center gap-x-2">
+                                        <!-- Asignar responsable -->
+                                        <button mat-icon-button color="accent" matTooltip="Asignar agentes" (click)="asignarResponsables(org.id)">
+                                            <mat-icon>groups</mat-icon>
+                                        </button>
+
+                                        <button mat-icon-button color="accent" matTooltip="Asignar categorias" (click)="asignarCategorias(org.id)">
+                                            <mat-icon>assignment</mat-icon>
+                                        </button>
+
+                                        <!-- Ver detalles -->
+                                        <button mat-icon-button color="primary" matTooltip="Editar" (click)="editarEquipoDeTrabajo(org)">
+                                            <mat-icon>edit</mat-icon>
+                                        </button>
+
+                                    </div>
+                                </td>
+                            </ng-container>
+
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                        </table>
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+
+
+
+    </div>
+</div>

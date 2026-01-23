@@ -1,0 +1,248 @@
+<div class="flex min-w-0 flex-auto flex-col">
+  <!-- Header -->
+  <div
+    class="bg-card flex flex-0 flex-col border-b p-6 dark:bg-transparent sm:flex-row sm:items-center sm:justify-between sm:px-10 sm:py-8">
+    <div class="min-w-0 flex-1">
+      <!-- Breadcrumbs -->
+      <!-- Title -->
+      <div class="mt-2">
+        <h2 class="truncate text-3xl font-extrabold leading-7 tracking-tight sm:leading-10 md:text-4xl">
+          Ticket # {{ticket.folio}}
+        </h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="flex-auto p-6 sm:p-10">
+    <div class="flex flex-col md:flex-row gap-6 w-full justify-center">
+
+      <!-- Columna izquierda: Detalles del ticket -->
+      <fuse-card class="w-full md:w-2/3 p-8 bg-card text-sm">
+        <div class="grid w-full grid-cols-1 md:grid-cols-4 gap-6 text-gray-700">
+          <div
+            class="col-span-1 md:col-span-4 w-full text-2xl font-semibold leading-tight text-primary-500 border-b pb-4 mb-4">
+            Detalles del Ticket
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Folio del ticket:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.folio }}</div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Categoría:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.categoria }}</div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Prioridad:</b></span>
+            <div class="text-base">
+              <span class="inline-block px-2 py-1 rounded bg-red-100 text-red-600 font-semibold">
+                {{ ticket.prioridad }}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Área del problema:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.area }}</div>
+          </div>
+
+          <div class="md:col-span-2">
+            <span class="font-medium"><b>Descripción:</b></span>
+            <div class="text-base text-gray-800 whitespace-pre-line">{{ ticket.descripcion }}</div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>¿Afecta la operación?</b></span>
+            <div class="text-base text-gray-800">
+              <span [ngClass]="ticket.afectaOperacion ? 'text-red-600 font-bold' : 'text-green-600 font-bold'">
+                {{ ticket.afectaOperacion ? 'Sí' : 'No' }}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Desde:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.desdeCuandoSePresenta | date:'mediumDate' }}</div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Estatus:</b></span>
+            <div class="text-base">
+              <span class="inline-block px-2 py-1 rounded bg-blue-100 text-blue-600 font-semibold">
+                {{ ticket.estatus }}
+              </span>
+            </div>
+          </div>
+
+          <div
+            class="col-span-1 md:col-span-4 w-full text-2xl font-semibold leading-tight text-primary-500 border-b pb-4 mb-4">
+            Datos de contacto
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Nombre:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.contactoNombre }}</div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Telefono:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.contactoTelefono }}</div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Correo electronico:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.contactoCorreo }}</div>
+          </div>
+
+          <div
+            class="col-span-1 md:col-span-4 w-full text-2xl font-semibold leading-tight text-primary-500 border-b pb-4 mb-4">
+            Agente asignado
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Nombre:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.asignadoNombre }}</div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Telefono:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.asignadoTelefono }}</div>
+          </div>
+
+          <div>
+            <span class="font-medium"><b>Correo electronico:</b></span>
+            <div class="text-base text-gray-800">{{ ticket.asignadoCorreo }}</div>
+          </div>
+
+          <div class="col-span-1 md:col-span-4 w-full text-2xl font-semibold leading-tight text-primary-500">
+
+            <div class="mt-8 flex justify-end gap-4">
+              
+              <button mat-flat-button color="warn" >Cancelar ticket</button>
+            </div>
+          </div>
+
+
+        </div>
+
+
+      </fuse-card>
+
+      <!-- Columna derecha: múltiples tarjetas apiladas -->
+      <div class="w-full md:w-1/3 flex flex-col gap-6">
+        <!-- Tarjeta: Responsable de Área -->
+        <fuse-card class="p-8 bg-card text-sm">
+          <div class="grid grid-cols-1 text-gray-700 w-full">
+            <div class="text-2xl font-semibold leading-tight text-primary-500 border-b pb-4 mb-4">
+              Historial de mensajes
+            </div>
+            <ng-container fuseCardExpansion>
+              <div class="overflow-y-auto max-h-[300px] min-h-[150px] pr-2">
+
+                <div class="relative mx-4 my-6 flex flex-col sm:mx-8">
+
+
+
+                  <div class="flex items-start" *ngFor="let mensaje of ticket.mensajes">
+                    <!-- Avatar del usuario -->
+                    <img class="mr-4 h-8 w-8 rounded-full" src="images/avatars/male-05.jpg" alt="Card cover image" />
+
+                    <!-- Contenido del mensaje -->
+                    <div class="mt-0.5 flex flex-col">
+                      <!-- Texto del mensaje -->
+                      <span>
+                        <b>{{ mensaje.userName }} - {{ mensaje.nombre }}</b> {{ mensaje.mensaje }}
+                      </span>
+                      <span class="text-sm text-gray-500">
+                        {{ mensaje.fecha | date:'dd/MM/yyyy HH:mm' }}
+                      </span>
+                      <!-- Archivos adjuntos (si existen) -->
+                      <div *ngIf="mensaje.archivos?.length > 0" class="mt-2 space-y-1">
+                        <div class="flex items-center" *ngFor="let archivo of mensaje.archivos">
+                          <!-- Ícono de archivo -->
+                          <div class="mr-2 h-6 w-6 flex items-center justify-center rounded-full bg-gray-200">
+                            <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                d="M8 2a2 2 0 00-2 2v12a2 2 0 002 2h4a2 2 0 002-2V7.414A2 2 0 0013.414 6L10 2H8zM10 4.5L13.5 8H10V4.5z" />
+                            </svg>
+                          </div>
+
+                          <!-- Nombre del archivo y enlace de descarga -->
+                          <a [href]="archivo.rutaPublica" [attr.download]="archivo.nombre"
+                            class="text-sm text-blue-600 hover:underline">
+                            {{ archivo.nombre }}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </ng-container>
+            <div class="mt-4 flex justify-end items-start sm:mt-0 w-full">
+
+              <button (click)="agregarMensaje()" class="px-3 sm:-mr-3" mat-flat-button color="primary">
+                Agregar mensaje
+              </button>
+            </div>
+          </div>
+
+
+        </fuse-card>
+
+        <fuse-card class="p-8 bg-card text-sm">
+          <div class="grid grid-cols-1 text-gray-700 w-full">
+            <div class="text-2xl font-semibold leading-tight text-primary-500 border-b pb-4 mb-4">
+              Archivos
+            </div>
+            <ng-container fuseCardExpansion>
+              <div class="max-h-120 overflow-y-auto">
+                <div class="relative mx-4 my-6 flex flex-col sm:mx-8">
+                  <div class="flex items-start" *ngFor="let archivo of ticket.archivos">
+                    <!-- Ícono de archivo -->
+                    <div class="mr-4 h-8 w-8 flex items-center justify-center rounded-full bg-gray-200">
+                      <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          d="M8 2a2 2 0 00-2 2v12a2 2 0 002 2h4a2 2 0 002-2V7.414A2 2 0 0013.414 6L10 2H8zM10 4.5L13.5 8H10V4.5z" />
+                      </svg>
+                    </div>
+
+                    <div class="mt-0.5 flex flex-col">
+                      <span>
+                        <b>
+                          <a [href]="archivo.url" [attr.download]="archivo.nombre">{{ archivo.nombre }}</a>
+                        </b>
+                      </span>
+                      <span class="text-sm text-gray-500">
+                        {{ archivo.fecha | date:'dd/MM/yyyy HH:mm' }}
+                      </span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </ng-container>
+            <div class="mt-4 flex justify-end items-start sm:mt-0 w-full">
+
+              <button (click)="agregarArchivo()" class="px-3 sm:-mr-3" mat-flat-button color="primary">
+                Agregar archivo
+              </button>
+            </div>
+          </div>
+
+
+        </fuse-card>
+
+      </div>
+
+    </div>
+  </div>
+
+
+</div>

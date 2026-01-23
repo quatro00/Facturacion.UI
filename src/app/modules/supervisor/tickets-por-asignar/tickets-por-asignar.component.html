@@ -1,0 +1,176 @@
+<div class="flex w-full flex-auto flex-col">
+
+     <div
+        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+        <!-- Loader -->
+        @if (isLoading) {
+        <div class="absolute inset-x-0 bottom-0">
+            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+        </div>
+        }
+        <!-- Title -->
+        <div>
+            <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+                Tickets por asignar
+            </h2>
+        </div>
+        <!-- Actions -->
+        <div class="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <!-- Select de Organización -->
+            <mat-form-field class="fuse-mat-dense min-w-64 sm:mr-4" style="flex: 1;">
+                <mat-label>Organización</mat-label>
+                <mat-select [formControl]="organizacionControl" (selectionChange)="onFilterChange()">
+                    <mat-option [value]="'0'">Todas</mat-option>
+                    <mat-option *ngFor="let org of organizaciones" [value]="org.id">
+                        {{ org.nombre }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="fuse-mat-dense min-w-64 sm:mr-4" style="flex: 1;">
+                <mat-label>Categoria</mat-label>
+                <mat-select [formControl]="categoriaControl" (selectionChange)="onFilterChange()">
+                    <mat-option [value]="'0'">Todas</mat-option>
+                    <mat-option *ngFor="let org of caegorias" [value]="org.id">
+                        {{ org.nombre }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="fuse-mat-dense min-w-64 sm:mr-4" style="flex: 1;">
+                <mat-label>Prioridad</mat-label>
+                <mat-select [formControl]="prioridadControl" (selectionChange)="onFilterChange()">
+                    <mat-option [value]="'0'">Todas</mat-option>
+                    <mat-option *ngFor="let org of prioridades" [value]="org.id">
+                        {{ org.nombre }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Búsqueda -->
+            <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" [subscriptSizing]="'dynamic'">
+                <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                <input matInput [formControl]="searchInputControl" [autocomplete]="'off'" [placeholder]="'Buscar'" />
+            </mat-form-field>
+        </div>
+
+        <!-- Tabla de Organizaciones -->
+    </div>
+
+  <div class="p-4">
+    <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3 ">
+      <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+        <!-- Recent transactions table -->
+        <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+          <div class="overflow-auto">
+            <table mat-table [dataSource]="dataSource"  class="mat-elevation-z1 w-full min-w-[1000px]">
+
+              <!-- Columnas -->
+              <ng-container matColumnDef="folio">
+                <th mat-header-cell *matHeaderCellDef>Folio</th>
+                <td mat-cell *matCellDef="let ticket">{{ ticket.folio }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="organizacion">
+                <th mat-header-cell *matHeaderCellDef>Organización</th>
+                <td mat-cell *matCellDef="let ticket">{{ ticket.organizacion }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="solicitante">
+                <th mat-header-cell *matHeaderCellDef>Solicitante</th>
+                <td mat-cell *matCellDef="let ticket">{{ ticket.solicitante }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="area">
+                <th mat-header-cell *matHeaderCellDef>Área</th>
+                <td mat-cell *matCellDef="let ticket">{{ ticket.area }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="estatus">
+                <th mat-header-cell *matHeaderCellDef>Estatus</th>
+                <td mat-cell *matCellDef="let ticket">{{ ticket.estatus }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="categoria">
+                <th mat-header-cell *matHeaderCellDef>Categoría</th>
+                <td mat-cell *matCellDef="let ticket">{{ ticket.categoria }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="prioridad">
+                <th mat-header-cell *matHeaderCellDef>Prioridad</th>
+                <td mat-cell *matCellDef="let ticket">
+                  <span [ngClass]="getPrioridadClass(ticket.prioridad)">
+                    {{ ticket.prioridad }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="descripcion">
+                <th mat-header-cell *matHeaderCellDef>Descripción</th>
+                <td mat-cell *matCellDef="let ticket">{{ ticket.descripcion }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="contacto">
+                <th mat-header-cell *matHeaderCellDef>Contacto</th>
+                <td mat-cell *matCellDef="let ticket">
+                  {{ ticket.contactoNombre }}<br />
+                  <small>{{ ticket.contactoTelefono }}</small>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="afectaOperacion">
+                <th mat-header-cell *matHeaderCellDef>¿Afecta operación?</th>
+                <td mat-cell *matCellDef="let ticket">
+                  <mat-icon [color]="ticket.afectaOperacion ? 'warn' : 'primary'">
+                    {{ ticket.afectaOperacion ? 'report_problem' : 'check_circle' }}
+                  </mat-icon>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="fechaCreacion">
+                <th mat-header-cell *matHeaderCellDef>Desde</th>
+                <td mat-cell *matCellDef="let ticket">{{ ticket.desde | date:'shortDate' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="asignado">
+                <th mat-header-cell *matHeaderCellDef>Asignado</th>
+                <td mat-cell *matCellDef="let ticket">
+
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let ticket">
+                  <div class="flex items-center gap-x-2">
+                    <!-- Ver detalles -->
+                    <button mat-icon-button color="primary" matTooltip="Ver detalles" (click)="verDetalle(ticket.id)">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+
+                    <!-- Descargar PDF -->
+                    <button mat-icon-button color="warn" matTooltip="Descargar PDF">
+                      <mat-icon>download</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+              <tr mat-row *matRowDef="let row; columns: columnas;"></tr>
+            </table>
+          </div>
+        </div>
+
+
+      </div>
+
+    </div>
+
+
+
+
+
+
+  </div>
+</div>

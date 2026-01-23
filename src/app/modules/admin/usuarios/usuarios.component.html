@@ -1,0 +1,160 @@
+<div class="flex w-full flex-auto flex-col">
+
+    <!-- Main -->
+    <!-- CONTENT GOES HERE -->
+    <div
+        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+        <!-- Loader -->
+        @if (isLoading) {
+        <div class="absolute inset-x-0 bottom-0">
+            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+        </div>
+        }
+        <!-- Title -->
+        <div>
+            <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+                Usuarios
+            </h2>
+        </div>
+        <!-- Actions -->
+        <div class="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <!-- Select de Organización -->
+            <mat-form-field class="fuse-mat-dense min-w-64 sm:mr-4" style="flex: 1;">
+                <mat-label>Rol</mat-label>
+                <mat-select [formControl]="organizacionControl" (selectionChange)="filtrarUsuariosPorRol($event.value)">
+                    <mat-option [value]="'0'">Todas</mat-option>
+                    <mat-option [value]="'Administrador'">Administrador</mat-option>
+                    <mat-option [value]="'Supervisor'">Supervisor</mat-option>
+                    <mat-option [value]="'Responsable de area'">Responsable de area</mat-option>
+
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Búsqueda -->
+           <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" [subscriptSizing]="'dynamic'">
+                <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                <input matInput [formControl]="searchInputControl" [autocomplete]="'off'" [placeholder]="'Buscar'" />
+            </mat-form-field>
+
+            <!-- Botón de nuevo -->
+            <button class="sm:ml-4" mat-flat-button color="primary" (click)="nueva()">
+                <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                <span class="ml-2 mr-1">Nuevo</span>
+            </button>
+        </div>
+
+        <!-- Tabla de Organizaciones -->
+    </div>
+
+    <div class="p-4">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3 ">
+            <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+                <!-- Recent transactions table -->
+                <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+                    <div class="mx-6 overflow-x-auto">
+                        <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 w-full" *ngIf="!isLoading">
+                            <ng-container matColumnDef="avatar">
+                            <th mat-header-cell *matHeaderCellDef> Avatar </th>
+                            <td mat-cell *matCellDef="let usuario">
+                            <img [src]="usuario.avatar" alt="avatar" class="w-10 h-10 rounded-full object-cover">
+                            </td>
+                        </ng-container>
+
+                        <!-- Username -->
+                        <ng-container matColumnDef="username">
+                            <th mat-header-cell *matHeaderCellDef> Usuario </th>
+                            <td mat-cell *matCellDef="let usuario"> {{ usuario.userName }} </td>
+                        </ng-container>
+
+                        <!-- nombre -->
+                        <ng-container matColumnDef="nombre">
+                            <th mat-header-cell *matHeaderCellDef> Nombre </th>
+                            <td mat-cell *matCellDef="let usuario"> {{ usuario.nombre }} </td>
+                        </ng-container>
+
+                         <!-- Apellidos -->
+                        <ng-container matColumnDef="apellidos">
+                            <th mat-header-cell *matHeaderCellDef> Apellidos </th>
+                            <td mat-cell *matCellDef="let usuario"> {{ usuario.apellidos }} </td>
+                        </ng-container>
+
+                        <!-- correoElectronico -->
+                        <ng-container matColumnDef="correoElectronico">
+                            <th mat-header-cell *matHeaderCellDef> Email </th>
+                            <td mat-cell *matCellDef="let usuario"> {{ usuario.email }} </td>
+                        </ng-container>
+
+                        <!-- Teléfono -->
+                        <ng-container matColumnDef="telefono">
+                            <th mat-header-cell *matHeaderCellDef> Teléfono </th>
+                            <td mat-cell *matCellDef="let usuario"> {{ usuario.telefono }} </td>
+                        </ng-container>
+
+                         <!-- Correo -->
+                        <ng-container matColumnDef="organizacion">
+                            <th mat-header-cell *matHeaderCellDef> Organización </th>
+                            <td mat-cell *matCellDef="let usuario"> {{ usuario.organizacion }} </td>
+                        </ng-container>
+
+                        
+
+                       
+
+                        <!-- Rol -->
+                       <ng-container matColumnDef="rol">
+                        <th mat-header-cell *matHeaderCellDef> Rol </th>
+                        <td mat-cell *matCellDef="let usuario">
+                            <ng-container *ngFor="let r of usuario.roles">
+                            <span class="inline-block py-1 px-2 mr-1 mb-1 rounded text-xs font-medium bg-primary-100 text-primary-700">
+                                {{ r }}
+                            </span>
+                            </ng-container>
+                        </td>
+                        </ng-container>
+
+                         <!-- Activo -->
+                        <ng-container matColumnDef="activo">
+                            <th mat-header-cell *matHeaderCellDef>Activo</th>
+                            <td mat-cell *matCellDef="let org">
+                                <mat-icon color="{{ org.activo ? 'primary' : 'warn' }}">
+                                    {{ org.activo ? 'check_circle' : 'cancel' }}
+                                </mat-icon>
+                            </td>
+                        </ng-container>
+
+                             <ng-container matColumnDef="acciones">
+                            <th mat-header-cell *matHeaderCellDef></th>
+                            <td mat-cell *matCellDef="let element">
+                                <!-- Botón Activar -->
+                                <button mat-icon-button color="primary" *ngIf="element.activo == false" (click)="activar(element)">
+                                    <mat-icon>check_circle</mat-icon>
+                                </button>
+
+                                <!-- Botón Desactivar -->
+                                <button mat-icon-button color="warn" *ngIf="element.activo == true" (click)="desactivar(element)">
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+
+                               
+                            </td>
+                        </ng-container>
+
+                        <!-- Header & Rows -->
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+                        </table>
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+
+
+
+    </div>

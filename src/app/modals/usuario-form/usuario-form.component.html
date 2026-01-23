@@ -1,0 +1,87 @@
+
+<mat-dialog-content [formGroup]="form">
+    <div class="grid grid-cols-2 gap-4 mt-4">
+
+        <div class="col-span-2 flex flex-col items-center justify-center text-center">
+            <label class="font-medium mb-2 block">Avatar</label>
+            <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Avatar"
+                class="w-24 h-24 rounded-full object-cover border mb-4" />
+
+            <button mat-flat-button color="primary" (click)="fileInput.click()">
+                Seleccionar archivo
+            </button>
+            <input type="file" #fileInput hidden (change)="onFileSelected($event)" accept="image/*" />
+        </div>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Usuario</mat-label>
+            <input matInput formControlName="usuario" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Apellidos</mat-label>
+            <input matInput formControlName="apellidos" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Correo Electrónico</mat-label>
+            <input matInput formControlName="correo" type="email" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Teléfono</mat-label>
+            <input matInput formControlName="telefono" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Contraseña</mat-label>
+            <input matInput formControlName="password" type="password" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Confirmar Contraseña</mat-label>
+            <input matInput formControlName="confirmPassword" type="password" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Rol</mat-label>
+            <mat-select formControlName="rol">
+                <mat-option *ngFor="let rol of roles" [value]="rol">{{ rol }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Organizacion</mat-label>
+            <mat-select formControlName="organizacionId">
+                <mat-option *ngFor="let organizacion of organizaciones" [value]="organizacion.id">{{ organizacion.nombre }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+
+     <button mat-button mat-dialog-close [disabled]="form.disabled">
+        @if (!form.disabled) {
+        <span> Cancelar </span>
+        }
+        @if (form.disabled) {
+        <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+        }
+    </button>
+
+    <button mat-raised-button class="fuse-mat-button" [color]="'primary'" [disabled]="form.disabled" (click)="guardar()">
+        @if (!form.disabled) {
+        <span> Guardar </span>
+        }
+        @if (form.disabled) {
+        <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+        }
+    </button>
+
+</mat-dialog-actions>

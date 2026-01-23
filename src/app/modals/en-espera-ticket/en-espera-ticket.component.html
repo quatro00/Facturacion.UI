@@ -1,0 +1,16 @@
+<h2 class="text-xl font-semibold mb-4">
+    En espera ticket
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="enviar()" class="space-y-4">
+    <mat-form-field appearance="fill" class="w-full">
+        <mat-label>Motivo</mat-label>
+        <textarea matInput rows="3" formControlName="mensaje"></textarea>
+    </mat-form-field>
+    <div class="flex justify-end gap-4 pt-4">
+        <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
+           Enviar
+        </button>
+    </div>
+</form>

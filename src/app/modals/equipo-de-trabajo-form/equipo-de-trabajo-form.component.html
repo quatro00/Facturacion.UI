@@ -1,0 +1,35 @@
+<h2 class="text-xl font-semibold mb-4">
+  {{ isEditMode ? 'Editar equipo de trabajo' : 'Registrar equipo de trabajo' }}
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+  <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Organizacion</mat-label>
+        <mat-select formControlName="organizacionId"  (selectionChange)="onSeleccionarOrganizacion($event.value)">
+            <mat-option *ngFor="let organizacion of organizaciones" [value]="organizacion.id">
+                {{ organizacion.clave }}-{{ organizacion.nombre }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+  <mat-form-field class="w-full">
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="nombre" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Supervisor</mat-label>
+        <mat-select formControlName="supervisorId">
+            <mat-option *ngFor="let supervisor of supervisoresFiltrados" [value]="supervisor.id">
+                {{ supervisor.nombre }} {{ supervisor.apellido }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+  <div class="flex justify-end gap-4 pt-4">
+    <button mat-stroked-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
+      {{ isEditMode ? 'Guardar cambios' : 'Crear' }}
+    </button>
+  </div>
+</form>

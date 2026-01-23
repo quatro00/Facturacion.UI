@@ -1,0 +1,21 @@
+<h2 class="text-xl font-semibold mb-4">
+    Asignar ticket
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="enviar()" class="space-y-4">
+     <mat-form-field appearance="fill" class="w-full">
+        <mat-label>Agente</mat-label>
+        <mat-select formControlName="agenteId">
+          <mat-option [value]="''">Seleccione</mat-option>
+          <mat-option *ngFor="let org of agentes" [value]="org.id">
+            {{ org.username }}-{{ org.nombre }} {{ org.apellidos }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    <div class="flex justify-end gap-4 pt-4">
+        <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
+           Enviar
+        </button>
+    </div>
+</form>

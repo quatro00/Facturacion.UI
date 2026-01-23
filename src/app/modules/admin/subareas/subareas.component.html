@@ -1,0 +1,87 @@
+<div class="flex w-full flex-auto flex-col">
+
+  <!-- Main -->
+  <!-- CONTENT GOES HERE -->
+  <div class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+    <!-- Loader -->
+    @if (isLoading) {
+    <div class="absolute inset-x-0 bottom-0">
+      <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+    </div>
+    }
+    <!-- Title -->
+    <div>
+      <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+        Sub areas
+      </h2>
+    </div>
+    <!-- Actions -->
+    <div class="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+      <!-- Select de Organización -->
+      <mat-form-field class="fuse-mat-dense min-w-64 sm:mr-4" style="flex: 1;">
+        <mat-label>Organización</mat-label>
+        <mat-select [formControl]="organizacionControl" (selectionChange)="onOrganizacionChange($event.value)">
+          <mat-option [value]="'0'">Seleccione</mat-option>
+          <mat-option *ngFor="let org of organizaciones" [value]="org.id">
+            {{ org.nombre }}
+          </mat-option>
+
+        </mat-select>
+      </mat-form-field>
+
+     
+
+      <!-- Botón de nuevo -->
+
+    </div>
+
+    <!-- Tabla de Organizaciones -->
+  </div>
+
+  <div class="p-4  w-full">
+
+    <div class="mx-auto flex w-full flex-wrap p-3">
+      <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+        <!-- Recent transactions table -->
+        <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="mat-elevation-z2 mt-4 w-full">
+          <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+            <!-- Nodo hoja -->
+            <button mat-icon-button disabled></button>
+            {{node.nombre}}
+            <button mat-icon-button (click)="editarSubArea(node)" matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="agregarSubArea(node)" matTooltip="Agregar subárea">
+              <mat-icon>add</mat-icon>
+            </button>
+
+          </mat-tree-node>
+
+          <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+            <!-- Nodo expandible -->
+            <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.nombre">
+              <mat-icon>
+                {{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
+              </mat-icon>
+            </button>
+            {{node.nombre}}
+            <button mat-icon-button (click)="editarSubArea(node)" matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="agregarSubArea(node)" matTooltip="Agregar subárea">
+              <mat-icon>add</mat-icon>
+            </button>
+          </mat-tree-node>
+        </mat-tree>
+
+
+      </div>
+
+    </div>
+
+
+
+
+
+
+  </div>

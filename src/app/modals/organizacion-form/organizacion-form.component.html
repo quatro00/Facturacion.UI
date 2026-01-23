@@ -1,0 +1,53 @@
+<h2 mat-dialog-title>Registrar organización</h2>
+<mat-dialog-content [formGroup]="form" class="flex flex-col gap-4 pt-2">
+  <mat-form-field appearance="outline">
+    <mat-label>Clave</mat-label>
+    <input matInput formControlName="clave" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="nombre" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Teléfono</mat-label>
+    <input matInput formControlName="telefono" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Dirección</mat-label>
+    <input matInput formControlName="direccion" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Responsable</mat-label>
+    <input matInput formControlName="responsable" />
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+ <button class="fuse-mat-button" mat-flat-button [color]="'warn'" [disabled]="form.disabled"
+    (click)="cancel()">
+    <mat-icon class="mr-2 text-white">cancel</mat-icon>
+    @if (!form.disabled) {
+    <span> Cancelar </span>
+    }
+    @if (form.disabled) {
+    <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+    }
+  </button>
+
+  <button class="fuse-mat-button" mat-flat-button [color]="'primary'" [disabled]="form.disabled"
+    (click)="save()">
+    <mat-icon class="mr-2 text-white">check</mat-icon>
+    @if (!form.disabled) {
+    <span> Guardar </span>
+    }
+    @if (form.disabled) {
+    <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+    }
+  </button>
+
+
+</mat-dialog-actions>

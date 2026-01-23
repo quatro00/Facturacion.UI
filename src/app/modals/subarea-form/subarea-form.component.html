@@ -1,0 +1,27 @@
+<h2 class="text-xl font-semibold mb-4">
+  {{ isEditMode ? 'Editar Área' : 'Crear Área' }}
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+  <mat-form-field class="w-full">
+    <mat-label>Clave</mat-label>
+    <input matInput formControlName="clave" required />
+  </mat-form-field>
+
+  <mat-form-field class="w-full">
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="nombre" required />
+  </mat-form-field>
+
+  <mat-form-field class="w-full">
+    <mat-label>Teléfono</mat-label>
+    <input matInput formControlName="telefono" />
+  </mat-form-field>
+
+  <div class="flex justify-end gap-4 pt-4">
+    <button mat-stroked-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
+      {{ isEditMode ? 'Guardar cambios' : 'Crear' }}
+    </button>
+  </div>
+</form>

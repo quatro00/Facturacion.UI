@@ -1,0 +1,123 @@
+<div class="flex w-full flex-auto flex-col">
+
+    <!-- Main -->
+    <!-- CONTENT GOES HERE -->
+    <div
+        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+        <!-- Loader -->
+        @if (isLoading) {
+        <div class="absolute inset-x-0 bottom-0">
+            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+        </div>
+        }
+        <!-- Title -->
+        <div>
+            <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+                Organizaciones
+            </h2>
+            <div class="text-secondary font-medium tracking-tight">
+                Listado de organizaciones registradas en el sistema
+            </div>
+        </div>
+        <!-- Actions -->
+        <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
+            <!-- Search -->
+            <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" [subscriptSizing]="'dynamic'">
+                <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                <input matInput [formControl]="searchInputControl" [autocomplete]="'off'" [placeholder]="'Buscar'" />
+            </mat-form-field>
+            <!-- Add product button -->
+            <button class="ml-4" mat-flat-button [color]="'primary'" (click)="nuevaOrganizacion()">
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                <span class="ml-2 mr-1">Nuevo</span>
+            </button>
+        </div>
+        <!-- Tabla de Organizaciones -->
+    </div>
+
+    <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3 ">
+        <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+            <!-- Recent transactions table -->
+            <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+                <div class="mx-6 overflow-x-auto">
+                    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1 w-full min-w-max">
+
+                        <!-- Clave -->
+                        <ng-container matColumnDef="clave">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Clave</th>
+                            <td mat-cell *matCellDef="let org">{{ org.clave }}</td>
+                        </ng-container>
+
+                        <!-- Nombre -->
+                        <ng-container matColumnDef="nombre">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+                            <td mat-cell *matCellDef="let org">{{ org.nombre }}</td>
+                        </ng-container>
+
+                        <!-- Teléfono -->
+                        <ng-container matColumnDef="telefono">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Teléfono</th>
+                            <td mat-cell *matCellDef="let org">{{ org.telefono }}</td>
+                        </ng-container>
+
+                        <!-- Dirección -->
+                        <ng-container matColumnDef="direccion">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Dirección</th>
+                            <td mat-cell *matCellDef="let org">{{ org.direccion }}</td>
+                        </ng-container>
+
+                        <!-- Responsable -->
+                        <ng-container matColumnDef="responsable">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Responsable</th>
+                            <td mat-cell *matCellDef="let org">{{ org.responsable }}</td>
+                        </ng-container>
+
+                        <!-- Activo -->
+                        <ng-container matColumnDef="activo">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Activo</th>
+                            <td mat-cell *matCellDef="let org">
+                                <mat-icon color="{{ org.activo ? 'primary' : 'warn' }}">
+                                    {{ org.activo ? 'check_circle' : 'cancel' }}
+                                </mat-icon>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="acciones">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header></th>
+                            <td mat-cell *matCellDef="let org">
+                                <!-- Botón Activar -->
+                                <button mat-icon-button color="primary" *ngIf="org.activo == false" (click)="activar(org)">
+                                    <mat-icon>check_circle</mat-icon>
+                                </button>
+
+                                <!-- Botón Desactivar -->
+                                <button mat-icon-button color="warn" *ngIf="org.activo == true" (click)="desactivar(org)">
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+
+                                <!-- Botón Editar -->
+                                <button mat-icon-button color="accent" (click)="editar(org)">
+                                    <mat-icon>edit</mat-icon>
+                                </button>
+                            </td>
+                        </ng-container>
+
+
+                        <!-- Encabezados y filas -->
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                    </table>
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+
+
+
+</div>

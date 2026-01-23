@@ -1,0 +1,185 @@
+<div class="flex w-full flex-auto flex-col">
+
+    <div
+        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+        <!-- Loader -->
+        @if (isLoading) {
+        <div class="absolute inset-x-0 bottom-0">
+            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+        </div>
+        }
+        <!-- Title -->
+        <div>
+            <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+                Nuevo ticket
+            </h2>
+        </div>
+
+        <!-- Tabla de Organizaciones -->
+    </div>
+
+    <div class="p-4">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3 ">
+            <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+                <!-- Recent transactions table -->
+                <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+                    <div class="mx-6">
+
+
+                        <div class="space-y-6" [formGroup]="form">
+                            <br />
+                            <!-- Organizacion -->
+                            <mat-form-field appearance="fill" class="w-full">
+                            <mat-label>Organización</mat-label>
+                            <mat-select formControlName="organizacion" (selectionChange)="onOrganizacionChange($event.value)">
+                                <mat-option [value]="''">Seleccione...</mat-option>
+                                <mat-option *ngFor="let cat of organizacion" [value]="cat.id">{{ cat.nombre }}</mat-option>
+                            </mat-select>
+                            <button mat-icon-button matTooltip="Selecciona la organización responsable" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                            </mat-form-field>
+
+                            <!-- Categoría -->
+                            <mat-form-field appearance="fill" class="w-full">
+                                <mat-label>Categoría</mat-label>
+                                <mat-select formControlName="categoria">
+                                    <mat-option [value]="''">Seleccione...</mat-option>
+                                    <mat-option *ngFor="let cat of categorias" [value]="cat.id">{{ cat.nombre }}</mat-option>
+                                </mat-select>
+                                 <button mat-icon-button matTooltip="Selecciona la categoria del ticket" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                            </mat-form-field>
+
+                            <!-- Prioridad -->
+                            <mat-form-field appearance="fill" class="w-full">
+                                <mat-label>Prioridad</mat-label>
+                                <mat-select formControlName="prioridad">
+                                    <mat-option [value]="''">Seleccione...</mat-option>
+                                    <mat-option *ngFor="let cat of prioridades" [value]="cat.id">{{ cat.nombre }}</mat-option>
+                                </mat-select>
+                                 <button mat-icon-button matTooltip="Selecciona la prioridad del ticket" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                            </mat-form-field>
+
+                            <!-- Descripción del reporte -->
+                            <mat-form-field appearance="fill" class="w-full">
+                                <mat-label>Descripción del reporte</mat-label>
+                                <textarea matInput rows="3" formControlName="descripcion"></textarea>
+                                 <button mat-icon-button matTooltip="Breve dscripción del problema" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                            </mat-form-field>
+
+                             <!-- Área específica -->
+                            <mat-form-field appearance="fill" class="w-full">
+                                <mat-label>Área</mat-label>
+                                <input matInput  formControlName="area" readonly="true"/>
+                                <button mat-raised-button color="primary" (click)="abrirSelectorDeArea()" [disabled]="form.get('organizacion')?.value == ''">Seleccionar
+                                    área</button>
+                                     <button mat-icon-button matTooltip="Selecciona el area que presenta la problematica" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                            </mat-form-field>
+
+                            <!-- Área específica -->
+                            <mat-form-field appearance="fill" class="w-full">
+                                <mat-label>Área específica</mat-label>
+                                <input matInput  formControlName="areaEspecifica"/>
+                                 <button mat-icon-button matTooltip="Especifica el lugar del problema" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                            </mat-form-field>
+
+                            <!-- Datos de contacto -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <mat-form-field appearance="fill">
+                                    <mat-label>Nombre de contacto</mat-label>
+                                    <input matInput formControlName="nombreContacto" />
+                                     <button mat-icon-button matTooltip="Ingresa el nombre del contacto" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                                </mat-form-field>
+
+                                <mat-form-field appearance="fill">
+                                    <mat-label>Teléfono</mat-label>
+                                    <input matInput type="tel" formControlName="telefono" />
+                                     <button mat-icon-button matTooltip="Ingresa el telefono del contacto" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                                </mat-form-field>
+
+                                <mat-form-field appearance="fill">
+                                    <mat-label>Correo</mat-label>
+                                    <input matInput type="email" formControlName="correo"/>
+                                     <button mat-icon-button matTooltip="Ingresa el correo electronico del contacto" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                                </mat-form-field>
+                            </div>
+
+                            <!-- Descripción del error
+                            <mat-form-field appearance="fill" class="w-full">
+                                <mat-label>Descripción del error</mat-label>
+                                <textarea matInput rows="3"></textarea>
+                            </mat-form-field>
+ -->
+                            <!-- ¿Afecta la operación? -->
+                            <mat-label>¿Afecta la operación?</mat-label>
+                            <mat-radio-group class="block mb-4" formControlName="afectaOperacion">
+                                <mat-radio-button  [value]="true">Sí</mat-radio-button>
+                                <mat-radio-button  [value]="false" class="ml-4">No</mat-radio-button>
+                            </mat-radio-group>
+
+                            <!-- Desde cuándo -->
+                            <mat-form-field appearance="fill" class="w-full">
+                                <mat-label>¿Desde cuándo ocurre?</mat-label>
+                                <input matInput [matDatepicker]="picker" formControlName="desdeCuandoOcurre" />
+                                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                                 <button mat-icon-button matTooltip="Ingresa la fecha desde cuando se presenta el problema" matTooltipPosition="right">
+                                <mat-icon>info</mat-icon>
+                            </button>
+                            </mat-form-field>
+
+                            <!-- Adjuntar fotos -->
+                            <label class="block mb-2 font-medium">Adjuntar fotos:</label>
+                            <input type="file" accept="image/*" multiple (change)="onFileSelected($event)"
+                                capture="environment" class="block" />
+
+                            <!-- Enviar -->
+                             <div class="flex justify-end space-x-2 mt-4">
+                                <button mat-raised-button class="fuse-mat-button" [color]="'accent'" [disabled]="form.invalid && !form.disabled " (click)="guardarTicket()">
+                                @if (!form.disabled) {
+                                <span> Enviar ticket </span>
+                                }
+                                @if (form.disabled) {
+                                <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+                                }
+                            </button>
+
+                            </div>
+                           
+                            <br /><br />
+                        </div>
+
+
+
+
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+
+
+
+    </div>
+</div>
