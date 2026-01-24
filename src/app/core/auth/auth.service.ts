@@ -59,7 +59,7 @@ export class AuthService {
         return throwError(() => new Error('Ya estás autenticado.'));
     }
 
-    return this._httpClient.post(`${environment.apiUrl}/administrador/auth/login`, credentials).pipe(
+    return this._httpClient.post(`${environment.apiUrl}/cliente/auth/login`, credentials).pipe(
         switchMap((response: any) => {
             // Guarda token y usuario
             localStorage.setItem('accessToken', response.accessToken);

@@ -20,10 +20,10 @@ import {
     defaultNavigation,
     futuristicNavigation,
     horizontalNavigation,
-    compactNavigation_supervisor,
-    defaultNavigation_supervisor,
-    futuristicNavigation_supervisor,
-    horizontalNavigation_supervisor,
+    compactNavigation_cliente,
+    defaultNavigation_cliente,
+    futuristicNavigation_cliente,
+    horizontalNavigation_cliente,
 } from 'app/mock-api/common/navigation/data';
 import { cloneDeep } from 'lodash-es';
 
@@ -72,13 +72,14 @@ export class NavigationMockApi {
         const userData = localStorage.getItem('user');
         var roles: any[];
         var rol = '';
+        console.log('userData', userData);
         if (userData) {
             roles = JSON.parse(userData).roles;
         }
         console.log(roles);
         if (roles != null) {
             if (roles.indexOf('Administrador') != -1 && rol == '') { rol = 'Administrador' }
-            if (roles.indexOf('Supervisor') != -1 && rol == '') { rol = 'Supervisor' }
+            if (roles.indexOf('Cliente') != -1 && rol == '') { rol = 'Cliente' }
             if (roles.indexOf('Responsable de area') != -1 && rol == '') { rol = 'Responsable de area' }
         }
 
@@ -96,11 +97,11 @@ export class NavigationMockApi {
             this._horizontalNavigation = horizontalNavigation_responsable;
         }
 
-        if (rol == 'Supervisor') {
-            this._compactNavigation = compactNavigation_supervisor;
-            this._defaultNavigation = defaultNavigation_supervisor;
-            this._futuristicNavigation = futuristicNavigation_supervisor;
-            this._horizontalNavigation = horizontalNavigation_supervisor;
+        if (rol == 'Cliente') {
+            this._compactNavigation = compactNavigation_cliente;
+            this._defaultNavigation = defaultNavigation_cliente;
+            this._futuristicNavigation = futuristicNavigation_cliente;
+            this._horizontalNavigation = horizontalNavigation_cliente;
         }
         // -----------------------------------------------------------------------------------------------------
         // @ Navigation - GET

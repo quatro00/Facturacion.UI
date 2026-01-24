@@ -179,30 +179,30 @@ export const horizontalNavigation_responsable: FuseNavigationItem[] = [
 ];
 
 //menus para el supervisor
-export const defaultNavigation_supervisor: FuseNavigationItem[] = [
+export const defaultNavigation_cliente: FuseNavigationItem[] = [
    {
         id   : 'home',
         title: 'Home',
         type : 'basic',
         icon : 'heroicons_outline:home',
-        link : '/supervisor/home'
+        link : '/cliente/home'
     },
     {
-        id   : 'TicketsPorAsignar',
-        title: 'Tickets por asignar',
+        id   : 'Perfil',
+        title: 'perfil',
         type : 'basic',
         icon : 'heroicons_outline:ticket',
-        link : '/supervisor/tickets-por-asignar'
+        link : '/cliente/tickets-por-asignar'
     },
     {
-        id   : 'ticketsAsignados',
-        title: 'Tickets asignados',
+        id   : 'EmitirFactura',
+        title: 'Emitir factura',
         type : 'basic',
         icon : 'heroicons_outline:ticket',
-        link : '/supervisor/tickets-asignados'
+        link : '/cliente/tickets-asignados'
     },
 ];
-export const compactNavigation_supervisor: FuseNavigationItem[] = [
+export const compactNavigation_cliente: FuseNavigationItem[] = [
     {
         id   : 'example',
         title: 'Example super',
@@ -211,7 +211,7 @@ export const compactNavigation_supervisor: FuseNavigationItem[] = [
         link : '/example'
     }
 ];
-export const futuristicNavigation_supervisor: FuseNavigationItem[] = [
+export const futuristicNavigation_cliente: FuseNavigationItem[] = [
     {
         id   : 'example',
         title: 'Example super',
@@ -220,7 +220,7 @@ export const futuristicNavigation_supervisor: FuseNavigationItem[] = [
         link : '/example'
     }
 ];
-export const horizontalNavigation_supervisor: FuseNavigationItem[] = [
+export const horizontalNavigation_cliente: FuseNavigationItem[] = [
     {
         id   : 'example',
         title: 'Example super',
