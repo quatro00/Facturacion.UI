@@ -1,1 +1,202 @@
-<p>cliente-registro works!</p>
+<div class="flex w-full flex-auto flex-col">
+    <div class="p-4">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3 ">
+            <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+                <!-- Recent transactions table -->
+                <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+                    <div class="mx-6">
+                        <br />
+                        <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+                            Registrar cliente
+                        </h2>
+                        <br />
+                        <div class="space-y-6" [formGroup]="form">
+                            <br />
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:col-span-2">
+                                    <!-- rfc -->
+                                    <mat-form-field appearance="fill" class="w-full">
+                                        <mat-label>RFC</mat-label>
+                                        <input matInput formControlName="rfc" />
+                                    </mat-form-field>
+
+                                    <!-- Razón social -->
+                                    <mat-form-field appearance="fill" class="w-full">
+                                        <mat-label>Razón social</mat-label>
+                                        <input matInput formControlName="razonSocial" />
+                                    </mat-form-field>
+
+                                    <!-- Régimen fiscal -->
+                                    <mat-form-field appearance="fill" class="w-full">
+                                        <mat-label>Régimen fiscal</mat-label>
+                                        <mat-select formControlName="regimenFiscal">
+                                            <mat-option [value]="''">Seleccione...</mat-option>
+                                            <mat-option *ngFor="let cat of regimenesFiscales" [value]="cat.id">
+                                                {{ cat.descripcion }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+
+                                    <!-- Razón social -->
+                                    <mat-form-field appearance="fill" class="w-full">
+                                        <mat-label>Email</mat-label>
+                                        <input matInput formControlName="email" />
+                                    </mat-form-field>
+
+                                    <!-- Razón social -->
+                                    <mat-form-field appearance="fill" class="w-full">
+                                        <mat-label>Teléfono</mat-label>
+                                        <input matInput formControlName="telefono" />
+                                    </mat-form-field>
+
+                                </div>
+
+                            <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+                                Dirección fiscal
+                            </h2>
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:col-span-2">
+
+                                <!-- pais -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Pais</mat-label>
+                                    <mat-select formControlName="pais">
+                                        <mat-option [value]="''">Seleccione...</mat-option>
+                                        <mat-option *ngFor="let pais of paises" [value]="pais.id">
+                                            {{ pais.descripcion }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <!-- rfc -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Codigo postal</mat-label>
+                                    <input matInput formControlName="codigoPostal" />
+                                </mat-form-field>
+
+                                <!-- Estado -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Estado</mat-label>
+                                    <input matInput formControlName="estado" readonly="" />
+                                </mat-form-field>
+
+                                <!-- Municipio -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Municipio</mat-label>
+                                    <input matInput formControlName="municipio" readonly="" />
+                                </mat-form-field>
+
+                                <!-- Colonia -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Colonia</mat-label>
+                                    <mat-select formControlName="colonia">
+                                        <mat-option [value]="''">Seleccione...</mat-option>
+                                        <mat-option *ngFor="let colonia of colonias" [value]="colonia">
+                                            {{ colonia }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <!-- Calle -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>calle</mat-label>
+                                    <input matInput formControlName="calle" />
+                                </mat-form-field>
+
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                                    <!-- Numero interior -->
+                                    <mat-form-field appearance="fill" class="w-full">
+                                        <mat-label>Número interior</mat-label>
+                                        <input matInput formControlName="noInterior" />
+                                    </mat-form-field>
+
+                                    <!-- Numero exterior -->
+                                    <mat-form-field appearance="fill" class="w-full">
+                                        <mat-label>Número exterior</mat-label>
+                                        <input matInput formControlName="noExterior" />
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                            <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+                                Datos adicionales
+                            </h2>
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:col-span-2">
+
+                                <!-- Metodo de pago -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Metodo de pago</mat-label>
+                                    <mat-select formControlName="metodoPago">
+                                        <mat-option [value]="''">Seleccione...</mat-option>
+                                        <mat-option *ngFor="let item of metodosPago" [value]="item.metodoPagoId">
+                                            {{ item.metodoPagoId }}-{{ item.descripcion }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <!-- Forma de pago -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Forma de pago</mat-label>
+                                    <mat-select formControlName="formaPago">
+                                        <mat-option [value]="''">Seleccione...</mat-option>
+                                        <mat-option *ngFor="let item of formasPago" [value]="item.cFormaPago1">
+                                            {{ item.cFormaPago1 }}-{{ item.descripcion }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <!-- Moneda -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Moneda</mat-label>
+                                    <mat-select formControlName="moneda">
+                                        <mat-option [value]="''">Seleccione...</mat-option>
+                                        <mat-option *ngFor="let item of monedas" [value]="item.cMoneda">
+                                            {{ item.cMoneda }}-{{ item.descripcion }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <!-- Exportacion -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Exportación</mat-label>
+                                    <mat-select formControlName="exportacion">
+                                        <mat-option [value]="''">Seleccione...</mat-option>
+                                        <mat-option *ngFor="let item of exportaciones" [value]="item.cExportacion1">
+                                            {{ item.cExportacion1 }}-{{ item.descripcion }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <!-- Uso cfdi -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Uso CFDI</mat-label>
+                                    <mat-select formControlName="usoCfdi">
+                                        <mat-option [value]="''">Seleccione...</mat-option>
+                                        <mat-option *ngFor="let item of usosCfdi" [value]="item.cUsoCfdi1">
+                                            {{ item.cUsoCfdi1 }}-{{ item.descripcion }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+
+                            </div>
+                            <!-- Enviar -->
+                            <div class="flex justify-end space-x-2 mt-4">
+                                <button mat-raised-button class="fuse-mat-button" [color]="'accent'"
+                                    [disabled]="form.invalid || isLoading" (click)="actualizarDatos()">
+
+                                    <ng-container *ngIf="!isLoading; else loadingTpl">
+                                        Guardar
+                                    </ng-container>
+
+                                    <ng-template #loadingTpl>
+                                        <mat-progress-spinner diameter="20" mode="indeterminate">
+                                        </mat-progress-spinner>
+                                    </ng-template>
+                                </button>
+                            </div>
+                            <br/><br/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

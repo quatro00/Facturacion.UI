@@ -13,10 +13,11 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
+import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Cliente_Clientes } from 'app/services/cliente/cliente_clientes.service';
 
 @Component({
   selector: 'app-clientes',
@@ -27,6 +28,7 @@ import { Router } from '@angular/router';
     MatTableModule,
     MatSortModule,
     MatIconModule,
+    MatMenuModule,
     MatProgressBarModule,
     MatFormFieldModule,
     MatIcon,
@@ -63,15 +65,15 @@ export class ClientesComponent {
 searchInputControl: UntypedFormControl = new UntypedFormControl();
   isLoading: boolean = false;
 
-  displayedColumns: string[] = ['rfc', 'razonSocial', 'usoCfdi', 'moneda', 'estado', 'acciones'];
+  displayedColumns: string[] = ['rfc', 'razonSocial', 'usoCfdi', 'moneda', 'acciones'];
   dataSource = new MatTableDataSource<any>([]);
 
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
     private dialog: MatDialog,
-    private router: Router
-    //private admin_organizacionService:admin_OrganizacionService
+    private router: Router,
+    private cliente_clientesService:Cliente_Clientes
   ) { }
 
   ngOnInit(): void {
@@ -88,10 +90,6 @@ searchInputControl: UntypedFormControl = new UntypedFormControl();
       );
     };
   }
-
-  
-
-
 
   editar(item){
     /*
@@ -113,9 +111,8 @@ searchInputControl: UntypedFormControl = new UntypedFormControl();
   }
 
   loadData(): void {
-    console.log(1);
-    /*
-    this.admin_organizacionService.GetAll()
+    
+    this.cliente_clientesService.Get()
     .subscribe({
           next: (response) => {
             console.log(response);
@@ -129,7 +126,7 @@ searchInputControl: UntypedFormControl = new UntypedFormControl();
             this.isLoading = false;
           },
         });
-*/
+
   }
 }
 

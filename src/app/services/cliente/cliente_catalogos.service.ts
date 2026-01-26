@@ -25,4 +25,24 @@ export class Cliente_Catalogos {
     return this.http.get<any>(`${environment.apiUrl}/${this.service}/getMunicipio`,{params});
   }
 
+  GetMetodoPago(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetMetodoPago`);
+  }
+
+  GetFormaPago(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetFormaPago`);
+  }
+
+  GetMoneda(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetMoneda`);
+  }
+
+  GetExportacion(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetExportacion`);
+  }
+
+  GetUsoCfdi(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetUsoCfdi`);
+  }
+
 }
