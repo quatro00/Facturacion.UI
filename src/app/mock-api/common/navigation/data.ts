@@ -195,6 +195,13 @@ export const defaultNavigation_cliente: FuseNavigationItem[] = [
         link : '/cliente/perfil'
     },
     {
+        id   : 'clientes',
+        title: 'Clientes',
+        type : 'basic',
+        icon : 'heroicons_outline:ticket',
+        link : '/cliente/clientes'
+    },
+    {
         id   : 'EmitirFactura',
         title: 'Emitir factura',
         type : 'basic',
