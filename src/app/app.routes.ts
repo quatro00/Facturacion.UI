@@ -120,10 +120,6 @@ export const appRoutes: Route[] = [
         resolve: {
             initialData: initialDataResolver
         },
-        children: [
-            { path: 'home', loadChildren: () => import('app/modules/cliente/home/home.route')},
-            { path: 'perfil', loadChildren: () => import('app/modules/cliente/perfil/perfil.route')},
-            { path: 'clientes', loadChildren: () => import('app/modules/cliente/clientes/clientes.route')},
-        ]
+        loadChildren: () => import('app/modules/cliente/cliente.route'),
     },
 ];
