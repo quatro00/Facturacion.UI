@@ -122,6 +122,7 @@ export const appRoutes: Route[] = [
         },
         children: [
             { path: 'home', loadChildren: () => import('app/modules/cliente/home/home.route')},
+            { path: 'perfil', loadChildren: () => import('app/modules/cliente/perfil/perfil.route')},
         ]
     },
 ];
