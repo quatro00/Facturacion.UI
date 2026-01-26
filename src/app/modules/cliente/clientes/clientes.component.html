@@ -69,7 +69,11 @@
                         <!-- Responsable -->
                         <ng-container matColumnDef="estado">
                             <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
-                            <td mat-cell *matCellDef="let org">{{ org.responsable }}</td>
+                            <td mat-cell *matCellDef="let org">
+                                <mat-chip [color]="org.activo ? 'primary' : 'warn'" selected>
+                                    {{ org.activo ? 'Activo' : 'Inactivo' }}
+                                </mat-chip>
+                            </td>
                         </ng-container>
 
                         <ng-container matColumnDef="acciones">
@@ -87,7 +91,7 @@
                                 </button>
 
                                 <!-- Ver detalle -->
-                                <button mat-icon-button matTooltip="Ver detalle" (click)="ver(org)">
+                                <button mat-icon-button matTooltip="Ver detalle" (click)="verCliente(org.clienteId)">
                                     <mat-icon>visibility</mat-icon>
                                 </button>
 

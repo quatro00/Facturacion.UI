@@ -24,34 +24,34 @@ import { Cliente_Catalogos } from 'app/services/cliente/cliente_catalogos.servic
 import { filter } from 'lodash';
 import { Cliente_Perfil } from 'app/services/cliente/cliente_perfil.service';
 import { Cliente_Clientes } from 'app/services/cliente/cliente_clientes.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
-  selector: 'app-cliente-registro',
+  selector: 'app-cliente',
   imports: [
-      MatSelectModule,
-      MatFormFieldModule,
-      MatOptionModule,
-      MatFormField,
-      MatLabel,
-      MatDialogActions,
-      MatDialogContent,
-      FormsModule,
-      ReactiveFormsModule,
-      MatFormFieldModule,
-      MatDatepickerModule,
-      MatRadioModule,
-      MatIcon,
-      MatTooltipModule,
-      MatButton,
-      MatInputModule,
-      CommonModule,
-      MatProgressSpinnerModule
-    ],
-  templateUrl: './cliente-registro.component.html',
-  styleUrl: './cliente-registro.component.scss'
+    MatSelectModule,
+          MatFormFieldModule,
+          MatOptionModule,
+          MatFormField,
+          MatLabel,
+          MatDialogActions,
+          MatDialogContent,
+          FormsModule,
+          ReactiveFormsModule,
+          MatFormFieldModule,
+          MatDatepickerModule,
+          MatRadioModule,
+          MatIcon,
+          MatTooltipModule,
+          MatButton,
+          MatInputModule,
+          CommonModule,
+          MatProgressSpinnerModule
+  ],
+  templateUrl: './cliente.component.html',
+  styleUrl: './cliente.component.scss'
 })
-export class ClienteRegistroComponent implements OnInit {
+export class ClienteComponent implements OnInit {
   isLoading: boolean = false;
 
   paises = [{id:'MXN', descripcion:'México'}]
@@ -62,8 +62,11 @@ export class ClienteRegistroComponent implements OnInit {
   monedas = [];
   exportaciones = [];
   usosCfdi = [];
-
+  coloniaSelected= '';
   colonias = [];
+
+  clienteId!: string;
+    cliente: any;
 
   form: FormGroup;
   constructor(
@@ -75,7 +78,8 @@ export class ClienteRegistroComponent implements OnInit {
     private ticketService: TicketService,
     private areaService: AreaService,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private _route: ActivatedRoute,
   ) {
 
 
@@ -103,6 +107,33 @@ export class ClienteRegistroComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.clienteId = this._route.snapshot.paramMap.get('id');
+    this.cliente_clientes.GetById(this.clienteId)
+    .subscribe(res => {
+        console.log(res);
+        this.form.patchValue({
+          rfc: res.rfc,
+          razonSocial: res.razonSocial,
+          regimenFiscal: res.regimenFiscalId,
+          email: res.email,
+          telefono: res.telefono,
+          pais: res.pais,
+          codigoPostal: res.codigoPostal,
+          estado: res.estado,
+          municipio: res.municipio,
+          colonia: res.colonia,
+          calle: res.calle,
+          noExterior: res.noExterior,
+          noInterior: res.noInterior,
+          metodoPago: res.metodoPago,
+          formaPago: res.formaPago,
+          moneda: res.moneda,
+          exportacion: res.exportacion,
+          usoCfdi: res.usoCfdi,
+        });
+        
+      });
+
     this.form.get('codigoPostal')!
       .valueChanges
       .pipe(
@@ -167,28 +198,29 @@ export class ClienteRegistroComponent implements OnInit {
     }
     this.isLoading = true;
     const payload = {
-      rfc: this.form.value.rfc,
-      razonSocial: this.form.value.razonSocial,
-      regimenFiscal: this.form.value.regimenFiscal,
-      email: this.form.value.email,
-      telefono: this.form.value.telefono,
-      pais: this.form.value.pais,
-      codigoPostal: this.form.value.codigoPostal,
-      municipio: this.form.value.municipio,
-      estado: this.form.value.estado,
-      colonia: this.form.value.colonia,
-      calle: this.form.value.calle,
-      noExterior: this.form.value.noExterior,
-      noInterior: this.form.value.noInterior,
+      Rfc: this.form.value.rfc,
+      RazonSocial: this.form.value.razonSocial,
+      RegimenFiscal: this.form.value.regimenFiscal,
+      Email: this.form.value.email,
+      Telefono: this.form.value.telefono,
+      Pais: this.form.value.pais,
+      CodigoPostal: this.form.value.codigoPostal,
+      Municipio: this.form.value.municipio,
+      Estado: this.form.value.estado,
+      Colonia: this.form.value.colonia,
+      Calle: this.form.value.calle,
+      NoExterior: this.form.value.noExterior,
+      NoInterior: this.form.value.noInterior,
 
-      metodoPago: this.form.value.metodoPago,
-      formaPago: this.form.value.formaPago,
-      moneda: this.form.value.moneda,
-      exportacion: this.form.value.exportacion,
-      usoCfdi: this.form.value.usoCfdi,
+      MetodoPago: this.form.value.metodoPago,
+      FormaPago: this.form.value.formaPago,
+      Moneda: this.form.value.moneda,
+      Exportacion: this.form.value.exportacion,
+      UsoCfdi: this.form.value.usoCfdi,
     };
 
-    this.cliente_clientes.CrearCliente(payload)
+    console.log(payload);
+    this.cliente_clientes.updateCliente(this.clienteId, payload)
       .subscribe({
         next: () => {
           // éxito
@@ -205,3 +237,4 @@ export class ClienteRegistroComponent implements OnInit {
   
 
 }
+

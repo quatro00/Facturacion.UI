@@ -5,6 +5,7 @@ import { LayoutComponent } from 'app/layout/layout.component';
 import { PerfilComponent } from './perfil/perfil.component';
 import { ClientesComponent } from './clientes/clientes.component';
 import { ClienteRegistroComponent } from './cliente-registro/cliente-registro.component';
+import { ClienteComponent } from './cliente/cliente.component';
 
 export default [
     {
@@ -15,6 +16,7 @@ export default [
             { path: 'clientes', component: ClientesComponent },
             { path: 'clientes/nuevo', component: ClienteRegistroComponent },
             { path: 'consultar-cliente/:id', component: ClienteRegistroComponent },
+            { path: 'clientes/cliente/:id', component: ClienteComponent },
         ]
     },
 ] as Routes;
