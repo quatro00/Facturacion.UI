@@ -13,7 +13,8 @@ export default [
             { path: 'home', component: HomeComponent },
             { path: 'perfil', component: PerfilComponent },
             { path: 'clientes', component: ClientesComponent },
-            { path: 'registrar-cliente', component: ClienteRegistroComponent },
+            { path: 'clientes/nuevo', component: ClienteRegistroComponent },
+            { path: 'consultar-cliente/:id', component: ClienteRegistroComponent },
         ]
     },
 ] as Routes;

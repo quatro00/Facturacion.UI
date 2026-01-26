@@ -16,6 +16,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-clientes',
@@ -69,6 +70,7 @@ searchInputControl: UntypedFormControl = new UntypedFormControl();
 
   constructor(
     private dialog: MatDialog,
+    private router: Router
     //private admin_organizacionService:admin_OrganizacionService
   ) { }
 
@@ -107,32 +109,10 @@ searchInputControl: UntypedFormControl = new UntypedFormControl();
   */
   }
   nuevoCliente(): void {
-    //this.isLoading = true;
-
-    // Simulación de carga (reemplazar con servicio real)
-    console.log(1);
-    /*
-    this.admin_organizacionService.GetAll()
-    .subscribe({
-          next: (response) => {
-            console.log(response);
-            this.dataSource.data = response;
-          },
-          error:(err)=>{
-            //this.msg.error(err.error.message);
-            //this.loadData();
-          },
-          complete() {
-            this.isLoading = false;
-          },
-        });
-*/
+    this.router.navigate(['/cliente/clientes/nuevo']);
   }
 
   loadData(): void {
-    //this.isLoading = true;
-
-    // Simulación de carga (reemplazar con servicio real)
     console.log(1);
     /*
     this.admin_organizacionService.GetAll()
