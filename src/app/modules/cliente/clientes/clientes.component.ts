@@ -119,6 +119,10 @@ searchInputControl: UntypedFormControl = new UntypedFormControl();
     this.router.navigate(['/cliente', 'clientes', 'cliente', id]);
   }
 
+  facturar(id): void {
+  this.router.navigate(['/cliente', 'clientes', 'cliente', id, 'facturar']);
+  }
+
   loadData(): void {
     
     this.cliente_clientesService.Get()

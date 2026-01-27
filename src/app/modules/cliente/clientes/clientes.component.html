@@ -81,7 +81,7 @@
                             <td mat-cell *matCellDef="let org" class="text-center">
 
                                 <!-- Facturar (acción principal) -->
-                                <button mat-icon-button color="primary" matTooltip="Facturar" (click)="facturar(org)">
+                                <button mat-icon-button color="primary" matTooltip="Facturar" (click)="facturar(org.clienteId)">
                                     <mat-icon>receipt_long</mat-icon>
                                 </button>
 

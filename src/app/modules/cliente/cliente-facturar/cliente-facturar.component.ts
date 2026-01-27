@@ -1,0 +1,248 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
+
+// Material
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTable, MatTableModule } from '@angular/material/table';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { Cliente_Clientes } from 'app/services/cliente/cliente_clientes.service';
+import { forkJoin } from 'rxjs';
+import { Cliente_Catalogos } from 'app/services/cliente/cliente_catalogos.service';
+import { AlertService } from 'app/services/alert.service';
+
+//import { ClientesService } from 'app/core/clientes/clientes.service';
+//import { CfdisService } from 'app/core/cfdis/cfdis.service';
+
+@Component({
+  selector: 'app-cliente-facturar',
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatTableModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDividerModule,
+    MatProgressSpinnerModule,
+    MatTableModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+  ],
+  templateUrl: './cliente-facturar.component.html',
+  styleUrl: './cliente-facturar.component.scss'
+})
+export class ClienteFacturarComponent  implements OnInit {
+  clienteId!: string;
+  cliente: any;
+
+  form!: FormGroup;
+  isLoading = false;
+  isSubmitting = false;
+
+  metodosPago = [];
+  formasPago = [];
+  monedas = [];
+  exportaciones = [];
+  usosCfdi = [];
+  regimenesFiscales = [];
+
+  displayedColumns = ['claveProdServ', 'descripcion', 'cantidad', 'valorUnitario', 'claveUnidad', 'importe', 'acciones'];
+  @ViewChild('conceptosTable') conceptosTable!: MatTable<any>;
+  constructor(
+    private _route: ActivatedRoute,
+    private _router: Router,
+    private _fb: FormBuilder,
+    private _clientesService: Cliente_Clientes,
+    private cliente_catalogos: Cliente_Catalogos,
+    private alertService: AlertService,
+    //private _cfdisService: CfdisService
+  ) {}
+
+  ngOnInit(): void {
+    this.form = this._fb.group({
+      // Datos del comprobante
+      serie: [''],
+      folio: [''],
+      fecha: [new Date(), Validators.required],
+
+      // Configuración CFDI (se prellena del cliente si existe)
+      usoCfdi: ['', Validators.required],
+      formaPago: [''],
+      metodoPago: [''],
+      moneda: ['MXN', Validators.required],
+      exportacion: ['01'], // 01 = No aplica (común)
+
+      // Conceptos
+      conceptos: this._fb.array([this.createConcepto()])
+    });
+
+    this._route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (!id) return;
+
+      this.clienteId = id;
+      this.loadData();
+      this.cargarClienteYConfig();
+    });
+
+
+  }
+
+  get conceptos(): FormArray {
+    return this.form.get('conceptos') as FormArray;
+  }
+
+  createConcepto(): FormGroup {
+    return this._fb.group({
+      claveProdServ: ['', Validators.required],
+      descripcion: ['', [Validators.required, Validators.maxLength(1000)]],
+      cantidad: [1, [Validators.required, Validators.min(0.000001)]],
+      valorUnitario: [0, [Validators.required, Validators.min(0)]],
+      claveUnidad: ['H87', Validators.required],
+    });
+  }
+
+  addConcepto(): void {
+    this.conceptos.push(this.createConcepto());
+    console.log(this.conceptos.length);
+    this.conceptosTable.renderRows();
+  }
+
+  removeConcepto(index: number): void {
+    if (this.conceptos.length === 1) return;
+    this.conceptos.removeAt(index);
+    this.conceptosTable.renderRows();
+  }
+
+  importeLinea(i: number): number {
+    const g = this.conceptos.at(i) as FormGroup;
+    const cantidad = Number(g.get('cantidad')?.value ?? 0);
+    const unitario = Number(g.get('valorUnitario')?.value ?? 0);
+    return this.round2(cantidad * unitario);
+  }
+
+  get subtotal(): number {
+    let sum = 0;
+    for (let i = 0; i < this.conceptos.length; i++) sum += this.importeLinea(i);
+    return this.round2(sum);
+  }
+
+  // En MVP: total = subtotal (luego agregas IVA/retenciones)
+  get total(): number {
+    return this.subtotal;
+  }
+
+  private round2(n: number): number {
+    return Math.round((n + Number.EPSILON) * 100) / 100;
+  }
+
+  loadData() {
+      forkJoin([
+        this.cliente_catalogos.GetRegimenesFiscales(),
+        this.cliente_catalogos.GetMetodoPago(),
+        this.cliente_catalogos.GetFormaPago(),
+        this.cliente_catalogos.GetMoneda(),
+        this.cliente_catalogos.GetExportacion(),
+        this.cliente_catalogos.GetUsoCfdi(),
+      ]).subscribe({
+        next: ([
+          catRegimenFiscalResponse,
+          catMetodoPagoResponse,
+          catFormaPagoResponse,
+          catMonedaResponse,
+          catExportacionResponse,
+          catUsosCfdiResponse
+        ]) => {
+          this.regimenesFiscales = catRegimenFiscalResponse;
+          this.metodosPago = catMetodoPagoResponse;
+          this.formasPago = catFormaPagoResponse;
+          this.monedas = catMonedaResponse;
+          this.exportaciones = catExportacionResponse;
+          this.usosCfdi = catUsosCfdiResponse
+        },
+        complete: () => { },
+        error: (err) => {
+          this.alertService.showError('Error', err.error);
+        }
+      });
+    }
+  cargarClienteYConfig(): void {
+    this.isLoading = true;
+
+    this._clientesService.GetById(this.clienteId)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: (data) => {
+          this.cliente = data;
+
+          // Prellenado desde clienteconfiguracion si viene en el DTO
+          this.form.patchValue({
+            usoCfdi: data.usoCfdi ?? '',
+            formaPago: data.formaPago ?? '',
+            metodoPago: data.metodoPago ?? '',
+            moneda: data.moneda ?? 'MXN',
+            exportacion: data.exportacion ?? '01',
+          });
+        },
+        error: (e) => console.error(e),
+      });
+  }
+
+  emitir(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const payload = {
+      clienteId: this.clienteId,
+      serie: this.form.value.serie || null,
+      folio: this.form.value.folio || null,
+      fecha: this.form.value.fecha,
+
+      usoCfdi: this.form.value.usoCfdi,
+      formaPago: this.form.value.formaPago || null,
+      metodoPago: this.form.value.metodoPago || null,
+      moneda: this.form.value.moneda,
+      exportacion: this.form.value.exportacion,
+
+      conceptos: this.form.value.conceptos.map((c: any) => ({
+        claveProdServ: c.claveProdServ,
+        descripcion: c.descripcion,
+        cantidad: Number(c.cantidad),
+        valorUnitario: Number(c.valorUnitario),
+        claveUnidad: c.claveUnidad,
+      })),
+    };
+
+    this.isSubmitting = true;
+
+    /*
+    this._cfdisService.emitir(payload)
+      .pipe(finalize(() => (this.isSubmitting = false)))
+      .subscribe({
+        next: (res) => {
+          // ejemplo: redirigir a listado de CFDIs del cliente
+          this._router.navigate(['/cliente', 'clientes', 'cliente', this.clienteId, 'cfdis']);
+        },
+        error: (e) => console.error(e),
+      });
+      */
+  }
+
+  cancelar(): void {
+    this._router.navigate(['/cliente', 'clientes']);
+  }
+}

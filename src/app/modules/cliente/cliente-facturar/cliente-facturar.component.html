@@ -1,0 +1,225 @@
+<div class="w-full p-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <div class="text-2xl font-semibold">Emitir factura</div>
+            <div class="text-secondary" *ngIf="cliente">
+                {{ cliente.razonSocial }} · {{ cliente.rfc }}
+            </div>
+        </div>
+
+        <button mat-stroked-button (click)="cancelar()">
+            <mat-icon class="mr-2">arrow_back</mat-icon>
+            Volver
+        </button>
+    </div>
+
+    <div class="p-4">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3 ">
+            <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+                <!-- Recent transactions table -->
+                <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+                    <div class="mx-6">
+                        <br />
+                        <form *ngIf="!isLoading" [formGroup]="form" class="grid grid-cols-12 gap-4">
+
+                            <!-- Comprobante -->
+                            <div class="col-span-12">
+                                <div class="text-lg font-medium mb-2">Comprobante</div>
+                            </div>
+
+                            <mat-form-field class="col-span-12 sm:col-span-3" appearance="fill">
+                                <mat-label>Serie</mat-label>
+                                <input matInput formControlName="serie" placeholder="A" />
+                            </mat-form-field>
+
+                            <mat-form-field class="col-span-12 sm:col-span-3" appearance="fill">
+                                <mat-label>Folio</mat-label>
+                                <input matInput formControlName="folio" placeholder="123" />
+                            </mat-form-field>
+
+                            <mat-form-field class="col-span-12 sm:col-span-6" appearance="fill">
+                                <mat-label>Fecha</mat-label>
+                                <input matInput [matDatepicker]="dp" formControlName="fecha" />
+                                <mat-datepicker-toggle matSuffix [for]="dp"></mat-datepicker-toggle>
+                                <mat-datepicker #dp></mat-datepicker>
+                            </mat-form-field>
+
+                            <!-- Config CFDI -->
+                            <div class="col-span-12 mt-2">
+                                <div class="text-lg font-medium mb-2">Configuración CFDI</div>
+                            </div>
+
+                            <mat-form-field class="col-span-12 sm:col-span-4" appearance="fill">
+                                <mat-label>Uso CFDI</mat-label>
+                                <mat-select formControlName="usoCfdi">
+                                    <mat-option [value]="''">Seleccione...</mat-option>
+                                    <mat-option *ngFor="let item of usosCfdi" [value]="item.cUsoCfdi1">
+                                        {{ item.cUsoCfdi1 }}-{{ item.descripcion }}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error *ngIf="form.get('usoCfdi')?.hasError('required')">Requerido</mat-error>
+                            </mat-form-field>
+
+                            <mat-form-field class="col-span-12 sm:col-span-4" appearance="fill">
+                                <mat-label>Forma de pago</mat-label>
+                                <mat-select formControlName="formaPago">
+                                    <mat-option [value]="''">Seleccione...</mat-option>
+                                    <mat-option *ngFor="let item of formasPago" [value]="item.cFormaPago1">
+                                        {{ item.cFormaPago1 }}-{{ item.descripcion }}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field class="col-span-12 sm:col-span-4" appearance="fill">
+                                <mat-label>Método de pago</mat-label>
+                                <mat-select formControlName="metodoPago">
+                                    <mat-option [value]="''">Seleccione...</mat-option>
+                                    <mat-option *ngFor="let item of metodosPago" [value]="item.metodoPagoId">
+                                        {{ item.metodoPagoId }}-{{ item.descripcion }}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field class="col-span-12 sm:col-span-4" appearance="fill">
+                                <mat-label>Moneda</mat-label>
+                                <mat-select formControlName="moneda">
+                                        <mat-option [value]="''">Seleccione...</mat-option>
+                                        <mat-option *ngFor="let item of monedas" [value]="item.cMoneda">
+                                            {{ item.cMoneda }}-{{ item.descripcion }}
+                                        </mat-option>
+                                    </mat-select>
+                                <mat-error *ngIf="form.get('moneda')?.hasError('required')">Requerido</mat-error>
+                            </mat-form-field>
+
+                            <mat-form-field class="col-span-12 sm:col-span-4" appearance="fill">
+                                <mat-label>Exportación</mat-label>
+                                <mat-select formControlName="exportacion">
+                                        <mat-option [value]="''">Seleccione...</mat-option>
+                                        <mat-option *ngFor="let item of exportaciones" [value]="item.cExportacion1">
+                                            {{ item.cExportacion1 }}-{{ item.descripcion }}
+                                        </mat-option>
+                                    </mat-select>
+                            </mat-form-field>
+
+                            <div class="col-span-12">
+                                <mat-divider class="my-4"></mat-divider>
+                            </div>
+
+                            <!-- Conceptos -->
+                            <div class="col-span-12 flex items-center justify-between">
+                                <div class="text-lg font-medium">Conceptos</div>
+                                <button type="button" mat-stroked-button (click)="addConcepto()">
+                                    <mat-icon class="mr-2">add</mat-icon>
+                                    Agregar concepto
+                                </button>
+                            </div>
+
+                            <div class="col-span-12 overflow-auto">
+                                <table #conceptosTable mat-table [dataSource]="conceptos.controls" class="w-full">
+
+                                    <ng-container matColumnDef="claveProdServ">
+                                        <th mat-header-cell *matHeaderCellDef>Clave Prod/Serv</th>
+                                        <td mat-cell *matCellDef="let row; let i = index" [formGroup]="conceptos.at(i)">
+                                            <mat-form-field appearance="fill" class="w-full">
+                                                <input matInput formControlName="claveProdServ"
+                                                    placeholder="01010101" />
+                                            </mat-form-field>
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="descripcion">
+                                        <th mat-header-cell *matHeaderCellDef>Descripción</th>
+                                        <td mat-cell *matCellDef="let row; let i = index" [formGroup]="conceptos.at(i)">
+                                            <mat-form-field appearance="fill" class="w-full">
+                                                <input matInput formControlName="descripcion"
+                                                    placeholder="Servicio / Producto" />
+                                            </mat-form-field>
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="cantidad">
+                                        <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+                                        <td mat-cell *matCellDef="let row; let i = index" [formGroup]="conceptos.at(i)">
+                                            <mat-form-field appearance="fill" class="w-full">
+                                                <input matInput type="number" formControlName="cantidad" />
+                                            </mat-form-field>
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="valorUnitario">
+                                        <th mat-header-cell *matHeaderCellDef>V. Unitario</th>
+                                        <td mat-cell *matCellDef="let row; let i = index" [formGroup]="conceptos.at(i)">
+                                            <mat-form-field appearance="fill" class="w-full">
+                                                <input matInput type="number" formControlName="valorUnitario" />
+                                            </mat-form-field>
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="claveUnidad">
+                                        <th mat-header-cell *matHeaderCellDef>Clave Unidad</th>
+                                        <td mat-cell *matCellDef="let row; let i = index" [formGroup]="conceptos.at(i)">
+                                            <mat-form-field appearance="fill" class="w-full">
+                                                <input matInput formControlName="claveUnidad" placeholder="H87" />
+                                            </mat-form-field>
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="importe">
+                                        <th mat-header-cell *matHeaderCellDef class="text-right">Importe</th>
+                                        <td mat-cell *matCellDef="let row; let i = index" class="text-right">
+                                            {{ importeLinea(i) | number:'1.2-2' }}
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="acciones">
+                                        <th mat-header-cell *matHeaderCellDef class="text-center">Acciones</th>
+                                        <td mat-cell *matCellDef="let row; let i = index" class="text-center">
+                                            <button type="button" mat-icon-button (click)="removeConcepto(i)"
+                                                [disabled]="conceptos.length === 1">
+                                                <mat-icon>delete</mat-icon>
+                                            </button>
+                                        </td>
+                                    </ng-container>
+
+                                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                                </table>
+                            </div>
+
+                            <!-- Totales (MVP) -->
+                            <div class="col-span-12 flex justify-end mt-4">
+                                <div class="w-full sm:w-80 border rounded p-4">
+                                    <div class="flex justify-between">
+                                        <span class="text-secondary">Subtotal</span>
+                                        <span>{{ subtotal | number:'1.2-2' }}</span>
+                                    </div>
+                                    <div class="flex justify-between mt-2 font-semibold">
+                                        <span>Total</span>
+                                        <span>{{ total | number:'1.2-2' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Acciones -->
+                            <div class="col-span-12 flex justify-end gap-3 mt-4">
+                                <button type="button" mat-stroked-button (click)="cancelar()" [disabled]="isSubmitting">
+                                    Cancelar
+                                </button>
+
+                                <button type="button" mat-flat-button color="accent" (click)="emitir()"
+                                    [disabled]="isSubmitting">
+                                    <ng-container *ngIf="!isSubmitting; else loadingTpl">Emitir</ng-container>
+                                    <ng-template #loadingTpl>
+                                        <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
+                                    </ng-template>
+                                </button>
+                            </div>
+                            <br />
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
