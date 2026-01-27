@@ -39,7 +39,21 @@
                                     <!-- rfc -->
                                     <mat-form-field appearance="fill" class="w-full">
                                         <mat-label>RFC</mat-label>
-                                        <input matInput formControlName="rfc" />
+                                        <input
+                                            (input)="form.get('rfc')?.setValue($event.target.value.toUpperCase(), { emitEvent: false })"
+                                            maxlength="13" matInput formControlName="rfc" />
+                                        <mat-error *ngIf="form.get('rfc')?.hasError('required')">
+                                            El RFC es obligatorio
+                                        </mat-error>
+
+                                        <mat-error
+                                            *ngIf="form.get('rfc')?.hasError('minlength') || form.get('rfc')?.hasError('maxlength')">
+                                            El RFC debe tener 12 o 13 caracteres
+                                        </mat-error>
+
+                                        <mat-error *ngIf="form.get('rfc')?.hasError('pattern')">
+                                            El RFC no tiene un formato válido
+                                        </mat-error>
                                     </mat-form-field>
 
                                     <!-- Razón social -->
@@ -53,8 +67,9 @@
                                         <mat-label>Régimen fiscal</mat-label>
                                         <mat-select formControlName="regimenFiscal">
                                             <mat-option [value]="''">Seleccione...</mat-option>
-                                            <mat-option *ngFor="let cat of regimenesFiscales" [value]="cat.id">
-                                                {{ cat.descripcion }}
+
+                                            <mat-option *ngFor="let cat of regimenesFiscalesFiltrados" [value]="cat.id">
+                                                {{ cat.regimenFiscal }}-{{ cat.descripcion }}
                                             </mat-option>
                                         </mat-select>
                                     </mat-form-field>

@@ -45,4 +45,7 @@ export class Cliente_Clientes {
     );
   }
 
+  emitirMulti(payload: any) {
+  return this.http.post<any>(`${environment.apiUrl}/cliente/factura/emitir-multi`, payload);
+}
 }

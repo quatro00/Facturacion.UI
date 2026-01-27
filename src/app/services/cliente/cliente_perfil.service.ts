@@ -32,6 +32,13 @@ export class Cliente_Perfil {
     );
   }
 
+  subirSellosAFacturama(force = false) {
+  return this.http.post<any>(
+   `${environment.apiUrl}/${this.service}/SubirSellosAFacturama`,
+    {}
+  );
+}
+
   descargarSellos(): Observable<Blob> {
     return this.http.get(
      `${environment.apiUrl}/${this.service}/DescargarSellos`,

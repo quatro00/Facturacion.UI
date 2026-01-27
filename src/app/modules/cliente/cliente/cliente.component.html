@@ -12,43 +12,57 @@
                         <br />
                         <div class="space-y-6" [formGroup]="form">
                             <br />
-                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:col-span-2">
-                                    <!-- rfc -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>RFC</mat-label>
-                                        <input matInput formControlName="rfc" />
-                                    </mat-form-field>
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:col-span-2">
+                                <!-- rfc -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>RFC</mat-label>
+                                    <input maxlength="13" matInput formControlName="rfc"
+                                        (input)="form.get('rfc')?.setValue($event.target.value.toUpperCase(), { emitEvent: false })" />
+                                    <mat-error *ngIf="form.get('rfc')?.hasError('required')">
+                                        El RFC es obligatorio
+                                    </mat-error>
 
-                                    <!-- Razón social -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Razón social</mat-label>
-                                        <input matInput formControlName="razonSocial" />
-                                    </mat-form-field>
+                                    <mat-error
+                                        *ngIf="form.get('rfc')?.hasError('minlength') || form.get('rfc')?.hasError('maxlength')">
+                                        El RFC debe tener 12 o 13 caracteres
+                                    </mat-error>
 
-                                    <!-- Régimen fiscal -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Régimen fiscal</mat-label>
-                                        <mat-select formControlName="regimenFiscal">
+                                    <mat-error *ngIf="form.get('rfc')?.hasError('pattern')">
+                                        El RFC no tiene un formato válido
+                                    </mat-error>
+                                </mat-form-field>
+
+                                <!-- Razón social -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Razón social</mat-label>
+                                    <input matInput formControlName="razonSocial" />
+                                </mat-form-field>
+
+                                <!-- Régimen fiscal -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Régimen fiscal</mat-label>
+                                    <mat-select formControlName="regimenFiscal">
                                             <mat-option [value]="''">Seleccione...</mat-option>
-                                            <mat-option *ngFor="let cat of regimenesFiscales" [value]="cat.id">
-                                                {{ cat.descripcion }}
+
+                                            <mat-option *ngFor="let cat of regimenesFiscalesFiltrados" [value]="cat.id">
+                                                {{ cat.regimenFiscal }}-{{ cat.descripcion }}
                                             </mat-option>
                                         </mat-select>
-                                    </mat-form-field>
+                                </mat-form-field>
 
-                                    <!-- Razón social -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Email</mat-label>
-                                        <input matInput formControlName="email" />
-                                    </mat-form-field>
+                                <!-- Razón social -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Email</mat-label>
+                                    <input matInput formControlName="email" />
+                                </mat-form-field>
 
-                                    <!-- Razón social -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Teléfono</mat-label>
-                                        <input matInput formControlName="telefono" />
-                                    </mat-form-field>
+                                <!-- Razón social -->
+                                <mat-form-field appearance="fill" class="w-full">
+                                    <mat-label>Teléfono</mat-label>
+                                    <input matInput formControlName="telefono" />
+                                </mat-form-field>
 
-                                </div>
+                            </div>
 
                             <h2 class="text-3xl font-semibold leading-8 tracking-tight">
                                 Dirección fiscal
@@ -192,7 +206,7 @@
                                     </ng-template>
                                 </button>
                             </div>
-                            <br/><br/>
+                            <br /><br />
                         </div>
                     </div>
                 </div>

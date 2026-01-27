@@ -109,7 +109,17 @@ export class ClienteFacturarComponent implements OnInit {
   conceptoOptions = new Map<number, Observable<any>>();
   claveUnidadOptions = new Map<number, Observable<any>>();
 
-  displayedColumns = ['claveProdServ', 'descripcion', 'cantidad', 'valorUnitario', 'claveUnidad', 'importe', 'acciones'];
+  displayedColumns = [
+    'claveProdServ',
+  'descripcion',
+  'cantidad',
+  'valorUnitario',
+  'claveUnidad',
+  'taxObject',
+  'ivaRate',
+  'importe',
+  'acciones'
+  ];
   @ViewChild('conceptosTable') conceptosTable!: MatTable<any>;
   constructor(
     private _route: ActivatedRoute,
@@ -124,8 +134,8 @@ export class ClienteFacturarComponent implements OnInit {
   ngOnInit(): void {
     this.form = this._fb.group({
       // Datos del comprobante
-      serie: [''],
-      folio: [''],
+      serie: ['a'],
+      folio: ['1'],
       fecha: [new Date(), Validators.required],
 
       // Configuración CFDI (se prellena del cliente si existe)
@@ -157,12 +167,14 @@ export class ClienteFacturarComponent implements OnInit {
 
   createConcepto(): FormGroup {
     return this._fb.group({
-      claveProdServ: ['', Validators.required],
-      descripcion: ['', [Validators.required, Validators.maxLength(1000)]],
+      claveProdServ: ['14111543', Validators.required],
+      descripcion: ['Piedra de tinta', [Validators.required, Validators.maxLength(1000)]],
       cantidad: [1, [Validators.required, Validators.min(0.000001)]],
-      valorUnitario: [0, [Validators.required, Validators.min(0)]],
+      valorUnitario: [23, [Validators.required, Validators.min(0)]],
       //claveUnidad: ['H87', Validators.required],
-      claveUnidad: ['', Validators.required],
+      claveUnidad: ['H87', Validators.required],
+      taxObject: ['02'],      // 01 = no objeto, 02 = sí objeto
+    ivaRate: [0.16],        // 0.16, 0, null (si no aplica)
     });
   }
 
@@ -255,35 +267,79 @@ export class ClienteFacturarComponent implements OnInit {
   }
 
   emitir(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+  if (this.form.invalid) {
+    this.form.markAllAsTouched();
+    return;
+  }
+
+  const conceptos = this.form.value.conceptos ?? [];
+
+  const items = conceptos.map((c: any) => {
+    const quantity = Number(c.cantidad || 0);
+    const unitPrice = Number(c.valorUnitario || 0);
+    const base = Number((quantity * unitPrice).toFixed(2));
+
+    const taxObject = (c.taxObject ?? '02') as string; // "01" o "02"
+    const ivaRate = c.ivaRate; // 0.16 | 0 | null
+
+    // Si NO es objeto de impuesto o el usuario eligió "Sin IVA"
+    if (taxObject === '01' || ivaRate === null || ivaRate === undefined) {
+      return {
+        productCode: c.claveProdServ,
+        unitCode: c.claveUnidad,
+        description: c.descripcion,
+        quantity,
+        unitPrice,
+        taxObject: '01',
+        taxes: [] // mejor mandar vacío o no mandar (depende de tu backend)
+      };
     }
 
-    const payload = {
-      clienteId: this.clienteId,
-      serie: this.form.value.serie || null,
-      folio: this.form.value.folio || null,
-      fecha: this.form.value.fecha,
+    // Sí objeto de impuesto
+    const ivaTotal = Number((base * Number(ivaRate)).toFixed(2));
 
-      usoCfdi: this.form.value.usoCfdi,
-      formaPago: this.form.value.formaPago || null,
-      metodoPago: this.form.value.metodoPago || null,
-      moneda: this.form.value.moneda,
-      exportacion: this.form.value.exportacion,
-
-      conceptos: this.form.value.conceptos.map((c: any) => ({
-        claveProdServ: c.claveProdServ,
-        descripcion: c.descripcion,
-        cantidad: Number(c.cantidad),
-        valorUnitario: Number(c.valorUnitario),
-        claveUnidad: c.claveUnidad,
-      })),
+    return {
+      productCode: c.claveProdServ,
+      unitCode: c.claveUnidad,
+      description: c.descripcion,
+      quantity,
+      unitPrice,
+      taxObject: '02',
+      taxes: [
+        {
+          name: 'IVA',
+          rate: Number(ivaRate), // 0.16 o 0
+          base,
+          total: ivaTotal
+        }
+      ]
     };
+  });
 
-    console.log(payload);
-    this.isSubmitting = true;
-  }
+  const payload = {
+    clienteId: this.clienteId,
+    serie: this.form.value.serie || null,
+    folio: this.form.value.folio || null,
+    fecha: this.form.value.fecha,
+    cfdiUse: this.form.value.usoCfdi,
+
+    expeditionPlace: this.form.value.expeditionPlace || '', // si lo tienes
+    cfdiType: 'I', // o tu valor real
+    currency: this.form.value.moneda,
+    exportation: this.form.value.exportacion,
+    paymentForm: this.form.value.formaPago || null,
+    paymentMethod: this.form.value.metodoPago || null,
+
+    items
+  };
+
+  console.log(payload);
+
+  this._clientesService.emitirMulti(payload).subscribe({
+    next: (res) => console.log(res),
+    error: (err) => console.log(err)
+  });
+}
 
   cancelar(): void {
     this._router.navigate(['/cliente', 'clientes']);

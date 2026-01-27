@@ -14,7 +14,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { AlertService } from 'app/services/alert.service';
 import { CatCategoriaService } from 'app/services/admin/catcategoria.service';
 import { CatPrioridadService } from 'app/services/admin/catprioridad.service';
-import { debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
+import { debounceTime, distinctUntilChanged, forkJoin, switchMap } from 'rxjs';
 import { AreaService } from 'app/services/admin/area.service';
 import { OrganizacionService } from 'app/services/admin/organizacion.service';
 import { SeleccionAreaComponent } from 'app/modals/seleccion-area/seleccion-area.component';
@@ -57,6 +57,7 @@ export class PerfilComponent implements OnInit {
 
   archivos = [] as File[];
   regimenesFiscales = [];
+  regimenesFiscalesFiltrados = [];
 
 
   categorias = [];
@@ -65,6 +66,8 @@ export class PerfilComponent implements OnInit {
   logoPreview: string | null = null;
   areaId;
 
+  RFC_REGEX =
+    /^([A-ZÑ&]{3,4})(\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])([A-Z\d]{3})$/;
   form: FormGroup;
   constructor(
     private fb: FormBuilder,
@@ -79,7 +82,17 @@ export class PerfilComponent implements OnInit {
 
 
     this.form = this.fb.group({
-      rfc: ['', Validators.required],
+      rfc: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(12),
+          Validators.maxLength(13),
+          Validators.pattern(
+            /^([A-ZÑ&]{3,4})(\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])([A-Z\d]{3})$/
+          )
+        ]
+      ],
       razonSocial: ['', Validators.required],
       regimenFiscal: ['', Validators.required],
       folioInicio: ['', Validators.required],
@@ -95,6 +108,10 @@ export class PerfilComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.form.get('rfc')?.valueChanges.subscribe(rfc => {
+    this.filtrarRegimenesPorRfc(rfc);
+  });
+
     this.form.get('codigoPostal')!
       .valueChanges
       .pipe(
@@ -107,6 +124,38 @@ export class PerfilComponent implements OnInit {
 
     this.loadData();
   }
+
+  filtrarRegimenesPorRfc(rfc: string): void {
+  if (!rfc) {
+    this.regimenesFiscalesFiltrados = [];
+    this.form.get('regimenFiscal')?.reset();
+    return;
+  }
+
+  const rfcLimpio = rfc.toUpperCase().trim();
+
+  // Persona moral → 12 caracteres
+  if (rfcLimpio.length === 12) {
+    this.regimenesFiscalesFiltrados = this.regimenesFiscales.filter(
+      x => x.moral === true
+    );
+  }
+
+  // Persona física → 13 caracteres
+  else if (rfcLimpio.length === 13) {
+    this.regimenesFiscalesFiltrados = this.regimenesFiscales.filter(
+      x => x.fisica === true
+    );
+  }
+
+  // RFC incompleto
+  else {
+    this.regimenesFiscalesFiltrados = [];
+  }
+
+  // Limpia el régimen seleccionado si ya no es válido
+  this.form.get('regimenFiscal')?.reset();
+}
 
   onCerSelected(event: any): void {
     const file = event.target.files[0];
@@ -131,53 +180,71 @@ export class PerfilComponent implements OnInit {
   }
 
   descargarSellos() {
-  this.isLoading = true;
+    this.isLoading = true;
 
-  this.cliente_perfil.descargarSellos().subscribe({
-    next: (blob) => {
-      const url = window.URL.createObjectURL(blob);
+    this.cliente_perfil.descargarSellos().subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
 
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'SellosDigitales.zip';
-      a.click();
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'SellosDigitales.zip';
+        a.click();
 
-      window.URL.revokeObjectURL(url);
-      this.isLoading = false;
-    },
-    error: () => {
-      this.isLoading = false;
-      this.alertService.showError('Error', 'No se pudieron descargar los sellos');
-    }
-  });
-}
+        window.URL.revokeObjectURL(url);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.alertService.showError('Error', 'No se pudieron descargar los sellos');
+      }
+    });
+  }
 
   enviarSellos(): void {
 
-  if (!this.cerBase64 || !this.keyBase64 || !this.passwordKey) {
-    return;
-  }
+    if (!this.cerBase64 || !this.keyBase64 || !this.passwordKey) {
+      return;
+    }
 
-  this.isLoading = true;
+    this.isLoading = true;
 
-  const payload = {
-    certificadoBase64: this.cerBase64,
-    llavePrivadaBase64: this.keyBase64,
-    passwordLlave: this.passwordKey
-  };
+    const payload = {
+      certificadoBase64: this.cerBase64,
+      llavePrivadaBase64: this.keyBase64,
+      passwordLlave: this.passwordKey
+    };
 
-  this.cliente_perfil.enviarSellos(payload)
-    .subscribe({
+    this.cliente_perfil.enviarSellos(payload).pipe(
+      switchMap(() => this.cliente_perfil.subirSellosAFacturama(false))
+    ).subscribe({
       next: () => {
         this.isLoading = false;
-        alert('Sellos enviados correctamente');
+        // toast/snack
       },
-      error: err => {
+      error: (err) => {
         this.isLoading = false;
-        alert(err.error ?? 'Error al enviar sellos');
+
+        // Si ya existía CSD en Facturama, puedes ofrecer force
+        const msg = err?.error ?? err?.message ?? 'Error';
+        // muestra msg
+        this.alertService.showError('Error', msg.message);
       }
     });
-}
+    /*
+    this.cliente_perfil.enviarSellos(payload)
+      .subscribe({
+        next: () => {
+          this.isLoading = false;
+          alert('Sellos enviados correctamente');
+        },
+        error: err => {
+          this.isLoading = false;
+          alert(err.error ?? 'Error al enviar sellos');
+        }
+      });
+      */
+  }
 
   buscarCodigoPostal(codigoPostal: string): void {
     this.cliente_catalogos.GetMunicipio(codigoPostal)
@@ -217,6 +284,8 @@ export class PerfilComponent implements OnInit {
         getRazonSocialResponse
       ]) => {
         this.regimenesFiscales = catRegimenFiscalResponse;
+
+        console.log(this.regimenesFiscales);
         console.log(getRazonSocialResponse);
         this.form.patchValue({
           calle: getRazonSocialResponse.calle,

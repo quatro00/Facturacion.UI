@@ -30,23 +30,23 @@ import { ActivatedRoute, Router } from '@angular/router';
   selector: 'app-cliente',
   imports: [
     MatSelectModule,
-          MatFormFieldModule,
-          MatOptionModule,
-          MatFormField,
-          MatLabel,
-          MatDialogActions,
-          MatDialogContent,
-          FormsModule,
-          ReactiveFormsModule,
-          MatFormFieldModule,
-          MatDatepickerModule,
-          MatRadioModule,
-          MatIcon,
-          MatTooltipModule,
-          MatButton,
-          MatInputModule,
-          CommonModule,
-          MatProgressSpinnerModule
+    MatFormFieldModule,
+    MatOptionModule,
+    MatFormField,
+    MatLabel,
+    MatDialogActions,
+    MatDialogContent,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatDatepickerModule,
+    MatRadioModule,
+    MatIcon,
+    MatTooltipModule,
+    MatButton,
+    MatInputModule,
+    CommonModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './cliente.component.html',
   styleUrl: './cliente.component.scss'
@@ -54,21 +54,24 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class ClienteComponent implements OnInit {
   isLoading: boolean = false;
 
-  paises = [{id:'MXN', descripcion:'México'}]
+  paises = [{ id: 'MXN', descripcion: 'México' }]
   regimenesFiscales = [];
-  
+  regimenesFiscalesFiltrados = [];
+
   metodosPago = [];
   formasPago = [];
   monedas = [];
   exportaciones = [];
   usosCfdi = [];
-  coloniaSelected= '';
+  coloniaSelected = '';
   colonias = [];
 
   clienteId!: string;
-    cliente: any;
+  cliente: any;
 
   form: FormGroup;
+  RFC_REGEX =
+    /^([A-ZÑ&]{3,4})(\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])([A-Z\d]{3})$/;
   constructor(
     private fb: FormBuilder,
     private alertService: AlertService,
@@ -84,7 +87,17 @@ export class ClienteComponent implements OnInit {
 
 
     this.form = this.fb.group({
-      rfc: ['', Validators.required],
+      rfc: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(12),
+          Validators.maxLength(13),
+          Validators.pattern(
+            /^([A-ZÑ&]{3,4})(\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])([A-Z\d]{3})$/
+          )
+        ]
+      ],
       razonSocial: ['', Validators.required],
       regimenFiscal: ['', Validators.required],
       email: ['', Validators.required],
@@ -108,8 +121,13 @@ export class ClienteComponent implements OnInit {
 
   ngOnInit(): void {
     this.clienteId = this._route.snapshot.paramMap.get('id');
+  
+    this.form.get('rfc')?.valueChanges.subscribe(rfc => {
+    this.filtrarRegimenesPorRfc(rfc);
+  });
+
     this.cliente_clientes.GetById(this.clienteId)
-    .subscribe(res => {
+      .subscribe(res => {
         console.log(res);
         this.form.patchValue({
           rfc: res.rfc,
@@ -131,7 +149,7 @@ export class ClienteComponent implements OnInit {
           exportacion: res.exportacion,
           usoCfdi: res.usoCfdi,
         });
-        
+
       });
 
     this.form.get('codigoPostal')!
@@ -147,6 +165,38 @@ export class ClienteComponent implements OnInit {
     this.loadData();
   }
 
+
+  filtrarRegimenesPorRfc(rfc: string): void {
+  if (!rfc) {
+    this.regimenesFiscalesFiltrados = [];
+    this.form.get('regimenFiscal')?.reset();
+    return;
+  }
+
+  const rfcLimpio = rfc.toUpperCase().trim();
+
+  // Persona moral → 12 caracteres
+  if (rfcLimpio.length === 12) {
+    this.regimenesFiscalesFiltrados = this.regimenesFiscales.filter(
+      x => x.moral === true
+    );
+  }
+
+  // Persona física → 13 caracteres
+  else if (rfcLimpio.length === 13) {
+    this.regimenesFiscalesFiltrados = this.regimenesFiscales.filter(
+      x => x.fisica === true
+    );
+  }
+
+  // RFC incompleto
+  else {
+    this.regimenesFiscalesFiltrados = [];
+  }
+
+  // Limpia el régimen seleccionado si ya no es válido
+  this.form.get('regimenFiscal')?.reset();
+}
 
   buscarCodigoPostal(codigoPostal: string): void {
     this.cliente_catalogos.GetMunicipio(codigoPostal)
@@ -177,11 +227,16 @@ export class ClienteComponent implements OnInit {
         catUsosCfdiResponse
       ]) => {
         this.regimenesFiscales = catRegimenFiscalResponse;
+        this.regimenesFiscalesFiltrados = catRegimenFiscalResponse;
         this.metodosPago = catMetodoPagoResponse;
         this.formasPago = catFormaPagoResponse;
         this.monedas = catMonedaResponse;
         this.exportaciones = catExportacionResponse;
-        this.usosCfdi = catUsosCfdiResponse
+        this.usosCfdi = catUsosCfdiResponse;
+        //console.log(this.form.get('rfc')?.value);
+        //console.log(this.regimenesFiscalesFiltrados);
+        //this.filtrarRegimenesPorRfc('GADC841216AP0');
+        //console.log(this.regimenesFiscalesFiltrados);
       },
       complete: () => { },
       error: (err) => {
@@ -234,7 +289,7 @@ export class ClienteComponent implements OnInit {
         }
       });
   }
-  
+
 
 }
 
