@@ -1,0 +1,38 @@
+.col-clave-prod {
+  width: 140px;
+}
+
+.col-descripcion {
+  width: 100%;
+  min-width: 320px;
+}
+
+.col-cantidad {
+  width: 90px;
+}
+
+.col-unitario {
+  width: 120px;
+}
+
+.col-unidad {
+  width: 70px;
+}
+
+.col-importe {
+  width: 120px;
+}
+
+.col-acciones {
+  width: 70px;
+}
+
+:host ::ng-deep .dense .mat-mdc-form-field-infix {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  min-height: 36px;
+}
+
+:host ::ng-deep .dense .mat-mdc-text-field-wrapper {
+  height: 40px;
+}

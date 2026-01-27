@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
-
+import { Observable, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
+import { FormGroup } from '@angular/forms';
 // Material
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,6 +21,7 @@ import { Cliente_Clientes } from 'app/services/cliente/cliente_clientes.service'
 import { forkJoin } from 'rxjs';
 import { Cliente_Catalogos } from 'app/services/cliente/cliente_catalogos.service';
 import { AlertService } from 'app/services/alert.service';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 //import { ClientesService } from 'app/core/clientes/clientes.service';
 //import { CfdisService } from 'app/core/cfdis/cfdis.service';
@@ -39,11 +42,56 @@ import { AlertService } from 'app/services/alert.service';
     MatTableModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatAutocompleteModule,
+    MatInputModule,
+    MatFormFieldModule
   ],
   templateUrl: './cliente-facturar.component.html',
-  styleUrl: './cliente-facturar.component.scss'
+  styles: [
+    /* language=SCSS */
+    `
+           .col-clave-prod {
+  width: 140px;
+}
+
+.col-descripcion {
+  width: 100%;
+  min-width: 320px;
+}
+
+.col-cantidad {
+  width: 30px;
+}
+
+.col-unitario {
+  width: 120px;
+}
+
+.col-unidad {
+  width: 70px;
+}
+
+.col-importe {
+  width: 120px;
+}
+
+.col-acciones {
+  width: 70px;
+}
+
+:host ::ng-deep .dense .mat-mdc-form-field-infix {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  min-height: 36px;
+}
+
+:host ::ng-deep .dense .mat-mdc-text-field-wrapper {
+  height: 40px;
+}
+        `,
+  ],
 })
-export class ClienteFacturarComponent  implements OnInit {
+export class ClienteFacturarComponent implements OnInit {
   clienteId!: string;
   cliente: any;
 
@@ -58,6 +106,9 @@ export class ClienteFacturarComponent  implements OnInit {
   usosCfdi = [];
   regimenesFiscales = [];
 
+  conceptoOptions = new Map<number, Observable<any>>();
+  claveUnidadOptions = new Map<number, Observable<any>>();
+
   displayedColumns = ['claveProdServ', 'descripcion', 'cantidad', 'valorUnitario', 'claveUnidad', 'importe', 'acciones'];
   @ViewChild('conceptosTable') conceptosTable!: MatTable<any>;
   constructor(
@@ -68,7 +119,7 @@ export class ClienteFacturarComponent  implements OnInit {
     private cliente_catalogos: Cliente_Catalogos,
     private alertService: AlertService,
     //private _cfdisService: CfdisService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.form = this._fb.group({
@@ -110,7 +161,8 @@ export class ClienteFacturarComponent  implements OnInit {
       descripcion: ['', [Validators.required, Validators.maxLength(1000)]],
       cantidad: [1, [Validators.required, Validators.min(0.000001)]],
       valorUnitario: [0, [Validators.required, Validators.min(0)]],
-      claveUnidad: ['H87', Validators.required],
+      //claveUnidad: ['H87', Validators.required],
+      claveUnidad: ['', Validators.required],
     });
   }
 
@@ -123,6 +175,8 @@ export class ClienteFacturarComponent  implements OnInit {
   removeConcepto(index: number): void {
     if (this.conceptos.length === 1) return;
     this.conceptos.removeAt(index);
+    this.conceptoOptions.clear();
+    this.claveUnidadOptions.clear();
     this.conceptosTable.renderRows();
   }
 
@@ -149,35 +203,35 @@ export class ClienteFacturarComponent  implements OnInit {
   }
 
   loadData() {
-      forkJoin([
-        this.cliente_catalogos.GetRegimenesFiscales(),
-        this.cliente_catalogos.GetMetodoPago(),
-        this.cliente_catalogos.GetFormaPago(),
-        this.cliente_catalogos.GetMoneda(),
-        this.cliente_catalogos.GetExportacion(),
-        this.cliente_catalogos.GetUsoCfdi(),
-      ]).subscribe({
-        next: ([
-          catRegimenFiscalResponse,
-          catMetodoPagoResponse,
-          catFormaPagoResponse,
-          catMonedaResponse,
-          catExportacionResponse,
-          catUsosCfdiResponse
-        ]) => {
-          this.regimenesFiscales = catRegimenFiscalResponse;
-          this.metodosPago = catMetodoPagoResponse;
-          this.formasPago = catFormaPagoResponse;
-          this.monedas = catMonedaResponse;
-          this.exportaciones = catExportacionResponse;
-          this.usosCfdi = catUsosCfdiResponse
-        },
-        complete: () => { },
-        error: (err) => {
-          this.alertService.showError('Error', err.error);
-        }
-      });
-    }
+    forkJoin([
+      this.cliente_catalogos.GetRegimenesFiscales(),
+      this.cliente_catalogos.GetMetodoPago(),
+      this.cliente_catalogos.GetFormaPago(),
+      this.cliente_catalogos.GetMoneda(),
+      this.cliente_catalogos.GetExportacion(),
+      this.cliente_catalogos.GetUsoCfdi(),
+    ]).subscribe({
+      next: ([
+        catRegimenFiscalResponse,
+        catMetodoPagoResponse,
+        catFormaPagoResponse,
+        catMonedaResponse,
+        catExportacionResponse,
+        catUsosCfdiResponse
+      ]) => {
+        this.regimenesFiscales = catRegimenFiscalResponse;
+        this.metodosPago = catMetodoPagoResponse;
+        this.formasPago = catFormaPagoResponse;
+        this.monedas = catMonedaResponse;
+        this.exportaciones = catExportacionResponse;
+        this.usosCfdi = catUsosCfdiResponse
+      },
+      complete: () => { },
+      error: (err) => {
+        this.alertService.showError('Error', err.error);
+      }
+    });
+  }
   cargarClienteYConfig(): void {
     this.isLoading = true;
 
@@ -227,22 +281,122 @@ export class ClienteFacturarComponent  implements OnInit {
       })),
     };
 
+    console.log(payload);
     this.isSubmitting = true;
-
-    /*
-    this._cfdisService.emitir(payload)
-      .pipe(finalize(() => (this.isSubmitting = false)))
-      .subscribe({
-        next: (res) => {
-          // ejemplo: redirigir a listado de CFDIs del cliente
-          this._router.navigate(['/cliente', 'clientes', 'cliente', this.clienteId, 'cfdis']);
-        },
-        error: (e) => console.error(e),
-      });
-      */
   }
 
   cancelar(): void {
     this._router.navigate(['/cliente', 'clientes']);
   }
+
+  private normalizeQuery_Unidad(v: any): string {
+    if (!v) return '';
+    if (typeof v === 'string') return v.trim();
+    return (v.cClaveUnidad ?? '').toString().trim();
+  }
+
+  private normalizeQuery(v: any): string {
+    if (!v) return '';
+    if (typeof v === 'string') return v.trim();
+    // si llega objeto seleccionado
+    return (v.cClaveProdServ ?? '').toString().trim();
+  }
+
+  getClaveUnidadOptions(i: number): Observable<any> {
+    if (this.claveUnidadOptions.has(i)) return this.claveUnidadOptions.get(i)!;
+
+    const fg = this.conceptos.at(i) as FormGroup;
+    const ctrl = fg.get('claveUnidad')!;
+
+    const obs = ctrl.valueChanges.pipe(
+      startWith(ctrl.value),
+      map(v => this.normalizeQuery_Unidad(v)),
+      debounceTime(250),
+      distinctUntilChanged(),
+      filter(q => q.length >= 2), // 👈 aquí es 2
+      switchMap(q =>
+        this.cliente_catalogos.GetClaveUnidad(q, 20).pipe(
+          catchError(() => of([]))
+        )
+      )
+    );
+
+    this.claveUnidadOptions.set(i, obs);
+    return obs;
+  }
+
+  displayClaveUnidad = (x: any | string): string =>
+    typeof x === 'string' ? x : `${x.cClaveUnidad} - ${x.nombre}`;
+
+  onSelectClaveUnidad(i: number, item: any): void {
+    const fg = this.conceptos.at(i) as FormGroup;
+
+    fg.patchValue({
+      claveUnidad: item.cClaveUnidad
+    }, { emitEvent: false });
+  }
+
+  // Limpia si no selecciona
+  onClaveUnidadBlur(i: number): void {
+    const fg = this.conceptos.at(i) as FormGroup;
+    const ctrl = fg.get('claveUnidad');
+    if (!ctrl) return;
+
+    const value = ctrl.value;
+
+    if (typeof value === 'string') {
+      fg.patchValue({ claveUnidad: '' }, { emitEvent: false });
+      ctrl.markAsTouched();
+    }
+  }
+
+  //--------------------
+  getConceptoOptions(i: number): Observable<any> {
+    if (this.conceptoOptions.has(i)) return this.conceptoOptions.get(i)!;
+
+    const fg = this.conceptos.at(i) as FormGroup;
+    const ctrl = fg.get('claveProdServ')!;
+
+    const obs = ctrl.valueChanges.pipe(
+      startWith(ctrl.value),
+      map(v => this.normalizeQuery(v)),
+      debounceTime(250),
+      distinctUntilChanged(),
+      filter(q => q.length >= 3),
+      switchMap(q =>
+        this.cliente_catalogos.GetConceptos(q, 20).pipe(
+          catchError(() => of([]))
+        )
+      )
+    );
+
+    this.conceptoOptions.set(i, obs);
+    return obs;
+  }
+
+  displayConcepto = (c: any | string): string =>
+    typeof c === 'string' ? c : `${c.cClaveProdServ} - ${c.descripcion}`;
+
+  onSelectConcepto(i: number, item: any): void {
+    const fg = this.conceptos.at(i) as FormGroup;
+
+    fg.patchValue({
+      claveProdServ: item.cClaveProdServ,
+      descripcion: item.descripcion
+    }, { emitEvent: false });
+
+  }
+
+
+  /*
+  removeConcepto(index: number): void {
+    if (this.conceptos.length === 1) return;
+  
+    this.conceptos.removeAt(index);
+  
+    // limpia caché y reconstruye (simple y efectivo)
+    this.conceptoOptions.clear();
+    // si usas mat-table: this.conceptosTable.renderRows();
+  }
+    */
 }

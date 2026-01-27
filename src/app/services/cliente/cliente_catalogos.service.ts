@@ -45,4 +45,19 @@ export class Cliente_Catalogos {
     return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetUsoCfdi`);
   }
 
+  GetConceptos(search: string, take = 20): Observable<any> {
+    const params = new HttpParams()
+      .set('search', search)
+      .set('take', take);
+      
+    return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetConceptos`, {params});
+  }
+
+  GetClaveUnidad(search: string, take = 20): Observable<any> {
+    const params = new HttpParams()
+      .set('search', search)
+      .set('take', take);
+      
+    return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetClaveUnidad`, {params});
+  }
 }
