@@ -8,6 +8,7 @@ import { ClienteRegistroComponent } from './cliente-registro/cliente-registro.co
 import { ClienteComponent } from './cliente/cliente.component';
 import { ClienteFacturarComponent } from './cliente-facturar/cliente-facturar.component';
 import { CfdisListComponent } from './cfdis-list/cfdis-list.component';
+import { CfdiDetalleComponent } from './cfdi-detalle/cfdi-detalle.component';
 
 export default [
     {
@@ -21,6 +22,7 @@ export default [
             { path: 'clientes/cliente/:id', component: ClienteComponent },
             { path: 'clientes/cliente/:id/facturar', component: ClienteFacturarComponent },
             { path: 'facturas', component: CfdisListComponent },
+            { path: 'cfdi/:id', component: CfdiDetalleComponent },
         ]
     },
 ] as Routes;

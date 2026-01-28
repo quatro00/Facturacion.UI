@@ -1,0 +1,257 @@
+<!-- cfdi-detalle.component.html -->
+<div class="w-full max-w-screen-xl mx-auto p-6">
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex items-center justify-center py-16">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+  </div>
+
+  <!-- Not found -->
+  <div *ngIf="!isLoading && !cfdi" class="p-6 rounded-2xl border bg-card">
+    <div class="text-lg font-semibold">No se encontró el CFDI</div>
+    <div class="text-secondary mt-1">Verifica el Id o tu acceso a la cuenta.</div>
+
+    <div class="mt-4">
+      <a mat-stroked-button color="primary" [routerLink]="['/cliente/facturas']">
+        <mat-icon class="mr-2">arrow_back</mat-icon>
+        Volver
+      </a>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <ng-container *ngIf="cfdi as c">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div class="min-w-0">
+        <div class="flex items-center gap-3 flex-wrap">
+          <a mat-icon-button [routerLink]="['/cliente/facturas']" matTooltip="Volver">
+            <mat-icon>arrow_back</mat-icon>
+          </a>
+
+          <div class="text-2xl font-semibold truncate">
+            CFDI {{ c.serie ?? '' }}{{ c.folio ?? '' }}
+          </div>
+
+          <mat-chip-set>
+            <mat-chip [disabled]="true">
+              {{ statusLabel }}
+            </mat-chip>
+            <mat-chip *ngIf="c.tipoCfdi" [disabled]="true">
+              Tipo: {{ c.tipoCfdi }}
+            </mat-chip>
+            <mat-chip *ngIf="c.moneda" [disabled]="true">
+              {{ c.moneda }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+
+        <div class="mt-2 text-sm text-secondary break-words">
+          <div><span class="font-medium">UUID:</span> {{ c.uuid }}</div>
+          <div><span class="font-medium">Timbrado:</span> {{ c.fechaTimbrado | date:'medium' }}</div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-2 flex-wrap justify-end">
+        <button mat-stroked-button color="primary" (click)="downloadPdf()">
+          <mat-icon class="mr-2">picture_as_pdf</mat-icon>
+          PDF
+        </button>
+
+        <button mat-stroked-button color="primary" (click)="downloadXml()">
+          <mat-icon class="mr-2">description</mat-icon>
+          XML
+        </button>
+
+        <button mat-stroked-button color="primary" *ngIf="isCancelado" (click)="downloadAcuse()">
+          <mat-icon class="mr-2">assignment_turned_in</mat-icon>
+          Acuse
+        </button>
+
+        <button mat-stroked-button (click)="reenviarCorreo()">
+          <mat-icon class="mr-2">mail</mat-icon>
+          Reenviar
+        </button>
+
+        <button mat-raised-button color="warn" (click)="cancelarCfdi()" [disabled]="!canCancelar">
+          <mat-icon class="mr-2">cancel</mat-icon>
+          Cancelar
+        </button>
+      </div>
+    </div>
+
+    <mat-divider class="my-6"></mat-divider>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Left / Main -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Datos generales -->
+        <div class="rounded-2xl border bg-card p-6">
+          <div class="text-lg font-semibold">Datos generales</div>
+          <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <div class="text-secondary">Forma de pago</div>
+              <div class="font-medium">{{ c.formaPago ?? '—' }}</div>
+            </div>
+            <div>
+              <div class="text-secondary">Método de pago</div>
+              <div class="font-medium">{{ c.metodoPago ?? '—' }}</div>
+            </div>
+            <div>
+              <div class="text-secondary">Lugar de expedición</div>
+              <div class="font-medium">{{ c.lugarExpedicion }}</div>
+            </div>
+            <div *ngIf="isCancelado">
+              <div class="text-secondary">Motivo cancelación</div>
+              <div class="font-medium">{{ c.motivoCancelacion ?? '—' }}</div>
+            </div>
+            <div *ngIf="isCancelado && c.uuidSustitucion">
+              <div class="text-secondary">UUID sustitución</div>
+              <div class="font-medium break-words">{{ c.uuidSustitucion }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Emisor / Receptor -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="rounded-2xl border bg-card p-6">
+            <div class="text-lg font-semibold">Emisor</div>
+            <div class="mt-4 text-sm space-y-2">
+              <div>
+                <div class="text-secondary">RFC</div>
+                <div class="font-medium">{{ c.rfcEmisor }}</div>
+              </div>
+              <div>
+                <div class="text-secondary">Razón social</div>
+                <div class="font-medium">{{ c.razonSocialEmisor ?? '—' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border bg-card p-6">
+            <div class="text-lg font-semibold">Receptor</div>
+            <div class="mt-4 text-sm space-y-2">
+              <div>
+                <div class="text-secondary">RFC</div>
+                <div class="font-medium">{{ c.rfcReceptor }}</div>
+              </div>
+              <div>
+                <div class="text-secondary">Razón social</div>
+                <div class="font-medium">{{ c.razonSocialReceptor ?? '—' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conceptos -->
+        <div class="rounded-2xl border bg-card p-6">
+          <div class="flex items-center justify-between">
+            <div class="text-lg font-semibold">Conceptos</div>
+            <div class="text-sm text-secondary">{{ c.conceptos?.length ?? 0 }} concepto(s)</div>
+          </div>
+
+          <div class="mt-4 overflow-x-auto">
+            <table mat-table [dataSource]="c.conceptos" class="w-full" [trackBy]="trackById">
+
+              <ng-container matColumnDef="cantidad">
+                <th mat-header-cell *matHeaderCellDef>Cant.</th>
+                <td mat-cell *matCellDef="let x">{{ x.cantidad }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="descripcion">
+                <th mat-header-cell *matHeaderCellDef>Descripción</th>
+                <td mat-cell *matCellDef="let x">
+                  <div class="font-medium">{{ x.descripcion }}</div>
+                  <div class="text-xs text-secondary" *ngIf="x.productCode || x.unitCode">
+                    <span *ngIf="x.productCode">Prod: {{ x.productCode }}</span>
+                    <span *ngIf="x.productCode && x.unitCode"> • </span>
+                    <span *ngIf="x.unitCode">Unidad: {{ x.unitCode }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="valorUnitario">
+                <th mat-header-cell *matHeaderCellDef class="text-right">V. Unit.</th>
+                <td mat-cell *matCellDef="let x" class="text-right">
+                  {{ x.valorUnitario | number:'1.2-2' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="descuento">
+                <th mat-header-cell *matHeaderCellDef class="text-right">Desc.</th>
+                <td mat-cell *matCellDef="let x" class="text-right">
+                  {{ x.descuento | number:'1.2-2' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="importe">
+                <th mat-header-cell *matHeaderCellDef class="text-right">Importe</th>
+                <td mat-cell *matCellDef="let x" class="text-right font-medium">
+                  {{ x.importe | number:'1.2-2' }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right / Sidebar -->
+      <div class="space-y-6">
+
+        <!-- Totales -->
+        <div class="rounded-2xl border bg-card p-6">
+          <div class="text-lg font-semibold">Totales</div>
+
+          <div class="mt-4 space-y-3 text-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-secondary">Subtotal</span>
+              <span class="font-medium">{{ c.subtotal | number:'1.2-2' }} {{ c.moneda }}</span>
+            </div>
+            <div class="flex items-center justify-between" *ngIf="c.descuento && c.descuento !== 0">
+              <span class="text-secondary">Descuento</span>
+              <span class="font-medium">- {{ c.descuento | number:'1.2-2' }} {{ c.moneda }}</span>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="flex items-center justify-between text-base">
+              <span class="font-semibold">Total</span>
+              <span class="font-semibold">{{ c.total | number:'1.2-2' }} {{ c.moneda }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historial -->
+        <div class="rounded-2xl border bg-card p-6">
+          <div class="text-lg font-semibold">Historial</div>
+
+          <div class="mt-4 space-y-4" *ngIf="c.historial?.length; else noHist">
+            <div *ngFor="let h of c.historial">
+              <div class="flex items-center justify-between">
+                <div class="font-medium">{{ h.estatus }}</div>
+                <div class="text-xs text-secondary">{{ h.createdAt | date:'short' }}</div>
+              </div>
+              <div class="text-sm text-secondary mt-1" *ngIf="h.motivo">{{ h.motivo }}</div>
+              <mat-divider class="mt-3"></mat-divider>
+            </div>
+          </div>
+
+          <ng-template #noHist>
+            <div class="text-sm text-secondary mt-3">Sin movimientos registrados.</div>
+          </ng-template>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
+</div>

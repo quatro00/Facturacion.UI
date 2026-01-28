@@ -6,24 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
+import { ReenviarCfdiDialogData, ReenviarCfdiDialogResult } from 'app/shared/models/cliente_facturacion/ReenviarCfdi.models';
 
-export interface ReenviarCfdiDialogData {
-  uuid: string;
-  serie: string;
-  folio: string;
-  receptorRfc: string;
-  total: number;
-  estatus: string; // 'TIMBRADO' | 'CANCELADO' etc.
-}
 
-export interface ReenviarCfdiDialogResult {
-  emailTo?: string | null;
-  includeXml: boolean;
-  includePdf: boolean;
-  includeAcuseCancelacion: boolean;
-  subject?: string | null;
-  message?: string | null;
-}
 
 @Component({
   selector: 'app-reenviar-cfdi-dialog-data',

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'environments/environment';
+import { CfdiDetalleDto } from 'app/shared/models/cliente_facturacion/CfdiDetalleDto';
 
 @Injectable({
   providedIn: 'root'
@@ -87,5 +88,9 @@ export class Cliente_Factura {
       `${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/reenviar`,
       body
     );
+  }
+
+  getCfdiDetalle(id: string): Observable<CfdiDetalleDto> {
+    return this.http.get<CfdiDetalleDto>(`${environment.apiUrl}/${this.service}/${id}`);
   }
 }
