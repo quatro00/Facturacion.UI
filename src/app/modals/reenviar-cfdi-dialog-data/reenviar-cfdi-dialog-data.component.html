@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>Reenviar CFDI por correo</h2>
+
+<mat-dialog-content class="space-y-4" [formGroup]="form">
+  <div class="text-sm">
+    <div><b>UUID:</b> {{ data.uuid }}</div>
+    <div><b>Serie/Folio:</b> {{ data.serie }}{{ data.folio }}</div>
+    <div><b>Receptor:</b> {{ data.receptorRfc }}</div>
+    <div><b>Total:</b> {{ data.total }}</div>
+    <div><b>Estatus:</b> {{ data.estatus }}</div>
+  </div>
+
+  <mat-form-field class="w-full">
+    <mat-label>Enviar a (opcional)</mat-label>
+    <input matInput formControlName="emailTo" placeholder="cliente@correo.com">
+    <mat-hint>Si lo dejas vacío, el backend usa el correo del cliente (si está registrado).</mat-hint>
+    <mat-error *ngIf="form.controls.emailTo.hasError('email')">
+      Correo inválido.
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field class="w-full">
+    <mat-label>Asunto (opcional)</mat-label>
+    <input matInput formControlName="subject" placeholder="Reenvío de CFDI">
+  </mat-form-field>
+
+  <mat-form-field class="w-full">
+    <mat-label>Mensaje (opcional)</mat-label>
+    <textarea matInput rows="3" formControlName="message" placeholder="Hola, adjunto tu CFDI."></textarea>
+  </mat-form-field>
+
+  <div class="space-y-2">
+    <mat-checkbox formControlName="includePdf">Adjuntar PDF</mat-checkbox>
+    <mat-checkbox formControlName="includeXml">Adjuntar XML</mat-checkbox>
+
+    <mat-checkbox formControlName="includeAcuseCancelacion" [disabled]="!canIncludeAcuse">
+      Adjuntar acuse de cancelación
+    </mat-checkbox>
+
+    <div class="text-xs opacity-70" *ngIf="!canIncludeAcuse">
+      El acuse solo está disponible cuando el CFDI está CANCELADO.
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cerrar</button>
+  <button mat-raised-button color="primary" (click)="submit()" [disabled]="form.invalid">
+    Reenviar
+  </button>
+</mat-dialog-actions>

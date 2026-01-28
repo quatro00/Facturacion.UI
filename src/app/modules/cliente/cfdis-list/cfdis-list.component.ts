@@ -33,6 +33,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Cliente_Factura } from 'app/services/cliente/cliente_factura.service';
 import { HttpResponse } from '@angular/common/http';
 import { CancelCfdiDialogComponent } from 'app/modals/cancel-cfdi-dialog/cancel-cfdi-dialog.component';
+import { ReenviarCfdiDialogDataComponent, ReenviarCfdiDialogResult } from 'app/modals/reenviar-cfdi-dialog-data/reenviar-cfdi-dialog-data.component';
 
 
 type CfdiStatus = 'Activo' | 'CANCELADO';
@@ -102,6 +103,7 @@ export class CfdisListComponent implements AfterViewInit {
   isDownloadingPdf = false;
   isDownloadingAcuse = false;
   cancelandoId: string | null = null;
+  isSendingEmail = false;
 
   isLoading = false;
 
@@ -302,9 +304,46 @@ export class CfdisListComponent implements AfterViewInit {
   }
 
   reenviarCorreo(c: CfdiRow): void {
-    // abre modal de correos
-    console.log('Reenviar correo', c.id);
-  }
+  const ref = this.dialog.open(ReenviarCfdiDialogDataComponent, {
+    width: '560px',
+    disableClose: true,
+    data: {
+      uuid: c.uuid,
+      serie: c.serie,
+      folio: c.folio,
+      receptorRfc: c.receptorRfc,
+      total: c.total,
+      estatus: c.estatus,
+    }
+  });
+
+  ref.afterClosed()
+    .pipe(filter((r: ReenviarCfdiDialogResult | undefined | null): r is ReenviarCfdiDialogResult => !!r))
+    .subscribe((result) => {
+      this.isSendingEmail = true;
+
+      this.facturasService.reenviarCfdi(c.id, {
+        emailTo: result.emailTo ?? null,
+        includePdf: result.includePdf,
+        includeXml: result.includeXml,
+        includeAcuseCancelacion: result.includeAcuseCancelacion,
+        subject: result.subject ?? null,
+        message: result.message ?? null,
+      })
+      .pipe(finalize(() => (this.isSendingEmail = false)))
+      .subscribe({
+        next: (resp) => {
+          console.log('Reenvío OK', resp);
+          // si usas snack:
+          // this.snack.open(`Enviado a ${resp.to}`, 'Cerrar', { duration: 3000 });
+        },
+        error: (err) => {
+          console.error(err);
+          // this.snack.open('No se pudo reenviar el CFDI', 'Cerrar', { duration: 3500 });
+        },
+      });
+    });
+}
 
   cancelarCfdi(c: CfdiRow): void {
     const ref = this.dialog.open(CancelCfdiDialogComponent, {

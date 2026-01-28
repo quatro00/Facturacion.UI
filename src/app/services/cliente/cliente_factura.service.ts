@@ -82,4 +82,10 @@ export class Cliente_Factura {
     return this.http.post<any>(`${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/cancel`, body);
   }
 
+  reenviarCfdi(cfdiId: string, body: any): Observable<any> {
+    return this.http.post<any>(
+      `${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/reenviar`,
+      body
+    );
+  }
 }
