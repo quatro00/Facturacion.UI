@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'environments/environment';
 
@@ -44,5 +44,38 @@ export class Cliente_Factura {
     return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetFacturas`, { params: httpParams });
   }
 
+
+  /*
+  downloadPdf(id: string, type: 'issued' | 'received' | 'payroll' = 'issued'): Observable<Blob> {
+    const params = new HttpParams().set('type', type);
+    return this.http.get(`${environment.apiUrl}/${this.service}/${id}/pdf`, { params, responseType: 'blob' });
+  }
+  */
+  downloadPdf(id: string, type: 'issued' | 'received' | 'payroll' = 'issued'): Observable<HttpResponse<Blob>> {
+    const params = new HttpParams().set('type', type);
+    return this.http.get(`${environment.apiUrl}/${this.service}/${id}/pdf`, {
+      params,
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
+
+  downloadXml(id: string, type: 'issued' | 'received' | 'payroll' = 'issued'): Observable<HttpResponse<Blob>> {
+    const params = new HttpParams().set('type', type);
+    return this.http.get(`${environment.apiUrl}/${this.service}/${id}/xml`, {
+      params,
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
+
+  downloadZip(id: string, type: 'issued' | 'received' | 'payroll' = 'issued'): Observable<Blob> {
+    const params = new HttpParams().set('type', type);
+    return this.http.get(`${environment.apiUrl}/${this.service}/${id}/zip`, { params, responseType: 'blob' });
+  }
+
+   cancelCfdi(cfdiId: string, body: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/cancel`, body);
+  }
 
 }
