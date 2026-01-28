@@ -1,0 +1,220 @@
+<div class="flex w-full flex-auto flex-col">
+
+  <!-- Header -->
+  <div class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+    <!-- Loader -->
+    @if (isLoading) {
+      <div class="absolute inset-x-0 bottom-0">
+        <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+      </div>
+    }
+
+    <!-- Title -->
+    <div>
+      <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+        CFDIs
+      </h2>
+      <div class="text-secondary font-medium tracking-tight">
+        Listado de facturas timbradas
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-6 flex shrink-0 items-center gap-3 sm:ml-4 sm:mt-0">
+
+      <!-- Search -->
+      <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" [subscriptSizing]="'dynamic'">
+        <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+        <input matInput [formControl]="searchInputControl" [autocomplete]="'off'" [placeholder]="'Buscar (UUID, RFC, Serie/Folio)'" />
+      </mat-form-field>
+
+      <!-- Refresh -->
+      <button mat-stroked-button (click)="reload()">
+        <mat-icon class="mr-2">refresh</mat-icon>
+        Actualizar
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="mx-auto w-full max-w-screen-xl px-3 pt-4">
+    <div class="bg-card rounded-2xl shadow p-4">
+      <div class="grid grid-cols-12 gap-4">
+
+        <!-- Date from -->
+        <mat-form-field class="col-span-12 sm:col-span-3" appearance="fill">
+          <mat-label>Desde</mat-label>
+          <input matInput [matDatepicker]="dpFrom" [formControl]="fromControl" />
+          <mat-datepicker-toggle matSuffix [for]="dpFrom"></mat-datepicker-toggle>
+          <mat-datepicker #dpFrom></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Date to -->
+        <mat-form-field class="col-span-12 sm:col-span-3" appearance="fill">
+          <mat-label>Hasta</mat-label>
+          <input matInput [matDatepicker]="dpTo" [formControl]="toControl" />
+          <mat-datepicker-toggle matSuffix [for]="dpTo"></mat-datepicker-toggle>
+          <mat-datepicker #dpTo></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Status -->
+        <mat-form-field class="col-span-12 sm:col-span-2" appearance="fill">
+          <mat-label>Estatus</mat-label>
+          <mat-select [formControl]="statusControl">
+            <mat-option value="">Todos</mat-option>
+            <mat-option value="Activo">Activo</mat-option>
+            <mat-option value="Cancelado">Cancelado</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Type -->
+        <mat-form-field class="col-span-12 sm:col-span-2" appearance="fill">
+          <mat-label>Tipo</mat-label>
+          <mat-select [formControl]="typeControl">
+            <mat-option value="">Todos</mat-option>
+            <mat-option value="I">Ingreso</mat-option>
+            <mat-option value="E">Egreso</mat-option>
+            <mat-option value="P">Pago</mat-option>
+            <mat-option value="T">Traslado</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Currency -->
+        <mat-form-field class="col-span-12 sm:col-span-2" appearance="fill">
+          <mat-label>Moneda</mat-label>
+          <mat-select [formControl]="currencyControl">
+            <mat-option value="">Todas</mat-option>
+            <mat-option value="MXN">MXN</mat-option>
+            <mat-option value="USD">USD</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+      </div>
+
+      <div class="flex justify-end gap-3 mt-2">
+        <button mat-stroked-button (click)="clearFilters()">Limpiar filtros</button>
+        <button mat-flat-button color="accent" (click)="applyFilters()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3">
+    <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+      <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+        <div class="mx-6 overflow-x-auto">
+
+          <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1 w-full min-w-max">
+
+            <!-- Fecha -->
+            <ng-container matColumnDef="fecha">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
+              <td mat-cell *matCellDef="let c">{{ c.fecha | date:'yyyy-MM-dd HH:mm' }}</td>
+            </ng-container>
+
+            <!-- Serie/Folio -->
+            <ng-container matColumnDef="serieFolio">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Serie/Folio</th>
+              <td mat-cell *matCellDef="let c">{{ c.serie }}-{{ c.folio }}</td>
+            </ng-container>
+
+            <!-- Receptor -->
+            <ng-container matColumnDef="receptor">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Receptor</th>
+              <td mat-cell *matCellDef="let c" class="whitespace-nowrap">
+                <div class="flex flex-col">
+                  <span class="font-medium">{{ c.receptorRfc }}</span>
+                  <span class="text-secondary text-sm truncate max-w-[320px]">{{ c.receptorNombre }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- UUID -->
+            <ng-container matColumnDef="uuid">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>UUID</th>
+              <td mat-cell *matCellDef="let c">
+                <span class="font-mono text-sm">{{ c.uuid }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Total -->
+            <ng-container matColumnDef="total">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-right">Total</th>
+              <td mat-cell *matCellDef="let c" class="text-right">
+                {{ c.total | number:'1.2-2' }} {{ c.moneda }}
+              </td>
+            </ng-container>
+
+            <!-- Estatus -->
+            <ng-container matColumnDef="estatus">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Estatus</th>
+              <td mat-cell *matCellDef="let c">
+                <mat-chip [color]="c.estatus === 'Activo' ? 'primary' : 'warn'" selected>
+                  {{ c.estatus }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Acciones -->
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef class="text-center">Acciones</th>
+              <td mat-cell *matCellDef="let c" class="text-center">
+
+                <!-- PDF -->
+                <button mat-icon-button color="primary" matTooltip="Descargar PDF" (click)="downloadPdf(c)">
+                  <mat-icon>picture_as_pdf</mat-icon>
+                </button>
+
+                <!-- XML -->
+                <button mat-icon-button color="primary" matTooltip="Descargar XML" (click)="downloadXml(c)">
+                  <mat-icon>description</mat-icon>
+                </button>
+
+                <!-- Ver detalle -->
+                <button mat-icon-button matTooltip="Ver detalle" (click)="verDetalle(c)">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+
+                <!-- Menú -->
+                <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Más acciones">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item (click)="reenviarCorreo(c)">
+                    <mat-icon>mail</mat-icon>
+                    <span>Reenviar por correo</span>
+                  </button>
+
+                  <button mat-menu-item (click)="cancelarCfdi(c)" [disabled]="c.estatus !== 'Activo'">
+                    <mat-icon>cancel</mat-icon>
+                    <span>Cancelar CFDI</span>
+                  </button>
+
+                  <button mat-menu-item (click)="copiarUuid(c)">
+                    <mat-icon>content_copy</mat-icon>
+                    <span>Copiar UUID</span>
+                  </button>
+                </mat-menu>
+
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+
+          <!-- Paginator -->
+          <mat-paginator
+            [pageSizeOptions]="[10, 25, 50]"
+            [pageSize]="10"
+            showFirstLastButtons>
+          </mat-paginator>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

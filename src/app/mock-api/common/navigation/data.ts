@@ -202,11 +202,11 @@ export const defaultNavigation_cliente: FuseNavigationItem[] = [
         link : '/cliente/clientes'
     },
     {
-        id   : 'EmitirFactura',
-        title: 'Emitir factura',
+        id   : 'Facturas',
+        title: 'Facturas',
         type : 'basic',
         icon : 'heroicons_outline:ticket',
-        link : '/cliente/tickets-asignados'
+        link : '/cliente/facturas'
     },
 ];
 export const compactNavigation_cliente: FuseNavigationItem[] = [
