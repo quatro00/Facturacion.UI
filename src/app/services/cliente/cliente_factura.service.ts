@@ -51,6 +51,10 @@ export class Cliente_Factura {
     return this.http.get(`${environment.apiUrl}/${this.service}/${id}/pdf`, { params, responseType: 'blob' });
   }
   */
+  downloadAcuse(cfdiId: string) {
+    return this.http.get(`${environment.apiUrl}/${this.service}/${cfdiId}/acuse`, { responseType: 'blob' });
+  }
+
   downloadPdf(id: string, type: 'issued' | 'received' | 'payroll' = 'issued'): Observable<HttpResponse<Blob>> {
     const params = new HttpParams().set('type', type);
     return this.http.get(`${environment.apiUrl}/${this.service}/${id}/pdf`, {
@@ -74,7 +78,7 @@ export class Cliente_Factura {
     return this.http.get(`${environment.apiUrl}/${this.service}/${id}/zip`, { params, responseType: 'blob' });
   }
 
-   cancelCfdi(cfdiId: string, body: any): Observable<any> {
+  cancelCfdi(cfdiId: string, body: any): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/cancel`, body);
   }
 

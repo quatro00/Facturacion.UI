@@ -35,7 +35,7 @@ import { HttpResponse } from '@angular/common/http';
 import { CancelCfdiDialogComponent } from 'app/modals/cancel-cfdi-dialog/cancel-cfdi-dialog.component';
 
 
-type CfdiStatus = 'Activo' | 'Cancelado';
+type CfdiStatus = 'Activo' | 'CANCELADO';
 
 export interface CfdiRow {
   id: string;            // GUID interno tuyo (o cfdiId)
@@ -100,6 +100,7 @@ export class CfdisListComponent implements AfterViewInit {
 
   isDownloadingXml = false;
   isDownloadingPdf = false;
+  isDownloadingAcuse = false;
   cancelandoId: string | null = null;
 
   isLoading = false;
@@ -249,6 +250,29 @@ export class CfdisListComponent implements AfterViewInit {
     // CFDI_A001234_RFC_XAXX010101000_UUID_1234ABCD.pdf
     return `CFDI_${serieFolio}_${rfc}_UUID_${uuidShort}.pdf`;
   }
+
+  downloadAcuse(c: CfdiRow): void {
+  // Seguridad extra en UI
+  if (c.estatus !== 'CANCELADO') {
+    return;
+  }
+
+  this.isDownloadingAcuse = true;
+
+  this.facturasService.downloadAcuse(c.id)
+    .pipe(finalize(() => (this.isDownloadingAcuse = false)))
+    .subscribe({
+      next: (blob: Blob) => {
+        const filename = `ACUSE_CANCELACION_${c.uuid}.xml`;
+        this.saveBlob(blob, filename);
+      },
+      error: (err) => {
+        console.error(err);
+        // Opcional UX
+        // this.snack.open('No se pudo descargar el acuse de cancelación', 'Cerrar', { duration: 3000 });
+      }
+    });
+}
 
   downloadXml(c: CfdiRow): void {
     this.isDownloadingXml = true;

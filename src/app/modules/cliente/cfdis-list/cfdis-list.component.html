@@ -4,9 +4,9 @@
   <div class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
     <!-- Loader -->
     @if (isLoading) {
-      <div class="absolute inset-x-0 bottom-0">
-        <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
-      </div>
+    <div class="absolute inset-x-0 bottom-0">
+      <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+    </div>
     }
 
     <!-- Title -->
@@ -25,7 +25,8 @@
       <!-- Search -->
       <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" [subscriptSizing]="'dynamic'">
         <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
-        <input matInput [formControl]="searchInputControl" [autocomplete]="'off'" [placeholder]="'Buscar (UUID, RFC, Serie/Folio)'" />
+        <input matInput [formControl]="searchInputControl" [autocomplete]="'off'"
+          [placeholder]="'Buscar (UUID, RFC, Serie/Folio)'" />
       </mat-form-field>
 
       <!-- Refresh -->
@@ -187,9 +188,16 @@
                     <span>Reenviar por correo</span>
                   </button>
 
-                  <button mat-menu-item (click)="cancelarCfdi(c)" [disabled]="c.estatus !== 'Activo'">
+
+                  <button mat-menu-item (click)="cancelarCfdi(c)" [disabled]="c.estatus !== 'TIMBRADO'">
                     <mat-icon>cancel</mat-icon>
                     <span>Cancelar CFDI</span>
+                  </button>
+
+                  <!-- Descargar acuse de cancelación -->
+                  <button mat-menu-item *ngIf="c.estatus === 'CANCELADO'" (click)="downloadAcuse(c)">
+                    <mat-icon>assignment_turned_in</mat-icon>
+                    <span>Descargar acuse de cancelación</span>
                   </button>
 
                   <button mat-menu-item (click)="copiarUuid(c)">
@@ -206,10 +214,7 @@
           </table>
 
           <!-- Paginator -->
-          <mat-paginator
-            [pageSizeOptions]="[10, 25, 50]"
-            [pageSize]="10"
-            showFirstLastButtons>
+          <mat-paginator [pageSizeOptions]="[10, 25, 50]" [pageSize]="10" showFirstLastButtons>
           </mat-paginator>
 
         </div>
