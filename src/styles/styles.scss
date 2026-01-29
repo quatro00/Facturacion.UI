@@ -20,3 +20,32 @@
   background-color: #2563eb; /* blue-600 */
   color: #ffffff;
 }
+
+.emisor-switcher {
+  width: 100%;
+}
+
+.emisor-switcher-panel {
+  min-width: 380px !important;
+  max-width: 520px !important;
+}
+
+.emisor-switcher-panel .mat-option-text {
+  white-space: normal !important;
+  line-height: 1.2rem;
+}
+
+.sidebar-user-header {
+  width: 100%;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.sidebar-user-header mat-form-field {
+  width: 100%;
+}
+
+.sidebar-user-header .mat-select-value-text {
+  white-space: normal !important;
+  line-height: 1.25rem;
+}

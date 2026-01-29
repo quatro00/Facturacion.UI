@@ -1,3 +1,9 @@
+import { CommonModule } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { Cliente_Perfil } from 'app/services/cliente/cliente_perfil.service';
+import { EmisorService, EmisorLite } from 'app/core/emisor/emisor.service';
+
 import { BooleanInput } from '@angular/cdk/coercion';
 import { NgClass } from '@angular/common';
 import {
@@ -30,6 +36,14 @@ import { Subject, takeUntil } from 'rxjs';
         MatIconModule,
         NgClass,
         MatDividerModule,
+        CommonModule,
+        MatFormFieldModule,
+        MatSelectModule,
+        MatButtonModule,
+        MatMenuModule,
+        MatIconModule,
+        NgClass,
+        MatDividerModule,
     ],
 })
 export class UserComponent implements OnInit, OnDestroy {
@@ -38,6 +52,9 @@ export class UserComponent implements OnInit, OnDestroy {
     /* eslint-enable @typescript-eslint/naming-convention */
 
     @Input() showAvatar: boolean = true;
+    emisores: EmisorLite[] = [];
+    selectedEmisorId: string | null = null;
+    loadingEmisores = false;
     user: User;
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
@@ -48,8 +65,10 @@ export class UserComponent implements OnInit, OnDestroy {
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _router: Router,
-        private _userService: UserService
-    ) {}
+        private _userService: UserService,
+        private _clientePerfil: Cliente_Perfil,
+        private _emisorService: EmisorService
+    ) { }
 
     // -----------------------------------------------------------------------------------------------------
     // @ Lifecycle hooks
@@ -68,6 +87,39 @@ export class UserComponent implements OnInit, OnDestroy {
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
             });
+
+        this.selectedEmisorId = this._emisorService.emisorId;
+
+        this.loadingEmisores = true;
+        this._clientePerfil.GetRazonesSociales().subscribe({
+            next: (list: EmisorLite[]) => {
+                this.emisores = (list || []).filter(x => x.activo !== false);
+
+                // Si no hay emisor seleccionado aún, usa default o el primero
+                if (!this.selectedEmisorId) {
+                    const def = this.emisores.find(x => x.esDefault) || this.emisores[0];
+                    if (def?.id) {
+                        this.selectedEmisorId = def.id;
+                        this._emisorService.setEmisorId(def.id);
+                    }
+                }
+
+                this._changeDetectorRef.markForCheck();
+            },
+            error: () => {
+                this._changeDetectorRef.markForCheck();
+            },
+            complete: () => {
+                this.loadingEmisores = false;
+                this._changeDetectorRef.markForCheck();
+            }
+        });
+    }
+
+    changeEmisor(id: string): void {
+        this.selectedEmisorId = id;
+        this._emisorService.setEmisorId(id);
+        this._changeDetectorRef.markForCheck();
     }
 
     /**

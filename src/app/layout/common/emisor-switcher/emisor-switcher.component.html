@@ -1,0 +1,25 @@
+<div class="w-full px-1" (click)="$event.stopPropagation()">
+  <mat-form-field
+    class="fuse-mat-dense fuse-mat-rounded w-full text-sm" [subscriptSizing]="'dynamic'">
+    <!--
+    <mat-icon
+      matPrefix
+      class="icon-size-5"
+      [svgIcon]="'heroicons_solid:building-office-2'">
+    </mat-icon>
+-->
+    <mat-select
+      [value]="selectedEmisorId"
+      (selectionChange)="changeEmisor($event.value)"
+      [panelClass]="'emisor-switcher-panel'"
+      [disabled]="loading || emisores.length === 0">
+
+      <mat-option *ngFor="let e of emisores" [value]="e.id">
+        <span class="block truncate text-sm">
+          {{ e.rfc }} – {{ e.razonSocial }}
+        </span>
+      </mat-option>
+
+    </mat-select>
+  </mat-form-field>
+</div>

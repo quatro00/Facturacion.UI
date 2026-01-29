@@ -1,0 +1,52 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Permite que el valor del mat-select use más espacio y pueda partirse */
+:host ::ng-deep .mat-mdc-select-value-text {
+  white-space: normal !important;
+  line-height: 1.2rem;
+}
+
+/* Panel más ancho al desplegar */
+:host ::ng-deep .emisor-switcher-panel {
+  min-width: 420px !important;
+  max-width: 560px !important;
+}
+
+/* Opciones con 2 líneas */
+:host ::ng-deep .emisor-switcher-panel .mdc-list-item__primary-text {
+  white-space: normal !important;
+  line-height: 1.2rem;
+}
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Texto del valor seleccionado */
+:host ::ng-deep .mat-mdc-select-value-text {
+  font-size: 0.85rem; // ~13.5px
+  line-height: 1.2rem;
+}
+
+/* Icono */
+:host ::ng-deep .mat-mdc-form-field-icon-prefix {
+  font-size: 18px;
+}
+
+/* Panel desplegable */
+:host ::ng-deep .emisor-switcher-panel {
+  min-width: 420px !important;
+  max-width: 560px !important;
+}
+
+/* Opciones del panel */
+:host ::ng-deep .emisor-switcher-panel .mdc-list-item__primary-text {
+  font-size: 0.85rem;
+  line-height: 1.2rem;
+  white-space: normal;
+}
+
