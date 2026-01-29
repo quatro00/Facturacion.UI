@@ -188,8 +188,8 @@ export const defaultNavigation_cliente: FuseNavigationItem[] = [
         link : '/cliente/home'
     },
     {
-        id   : 'Perfil',
-        title: 'perfil',
+        id   : 'Emisores',
+        title: 'Emisores',
         type : 'basic',
         icon : 'heroicons_outline:ticket',
         link : '/cliente/perfil'

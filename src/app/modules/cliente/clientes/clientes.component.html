@@ -1,136 +1,198 @@
 <div class="flex w-full flex-auto flex-col">
 
-    <!-- Main -->
-    <!-- CONTENT GOES HERE -->
-    <div
-        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
-        <!-- Loader -->
-        @if (isLoading) {
-        <div class="absolute inset-x-0 bottom-0">
-            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
-        </div>
-        }
-        <!-- Title -->
-        <div>
-            <h2 class="text-3xl font-semibold leading-8 tracking-tight">
-                Clientes
-            </h2>
-            <div class="text-secondary font-medium tracking-tight">
-                Listado de clientes registrados
-            </div>
-        </div>
-        <!-- Actions -->
-        <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
-            <!-- Search -->
-            <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" [subscriptSizing]="'dynamic'">
-                <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
-                <input matInput [formControl]="searchInputControl" [autocomplete]="'off'" [placeholder]="'Buscar'" />
-            </mat-form-field>
-            <!-- Add product button -->
-            <button class="ml-4" mat-flat-button [color]="'accent'" (click)="nuevoCliente()">
-                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                <span class="ml-2 mr-1">Registrar cliente</span>
-            </button>
-        </div>
-        <!-- Tabla de Organizaciones -->
+  <!-- Header -->
+  <div class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+    <!-- Loader -->
+    @if (isLoading) {
+    <div class="absolute inset-x-0 bottom-0">
+      <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+    </div>
+    }
+
+    <!-- Title -->
+    <div>
+      <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+        Clientes
+      </h2>
+      <div class="text-secondary font-medium tracking-tight">
+        Listado de clientes registrados
+      </div>
     </div>
 
-    <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3 ">
-        <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
-            <!-- Recent transactions table -->
-            <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
-                <div class="mx-6 overflow-x-auto">
-                    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1 w-full min-w-max">
+    <!-- Actions -->
+    <div class="mt-6 flex shrink-0 items-center gap-3 sm:ml-4 sm:mt-0">
 
-                        <!-- Clave -->
-                        <ng-container matColumnDef="rfc">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header>RFC</th>
-                            <td mat-cell *matCellDef="let org">{{ org.rfc }}</td>
-                        </ng-container>
+      <!-- Search -->
+      <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" [subscriptSizing]="'dynamic'">
+        <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+        <input
+          matInput
+          [formControl]="searchInputControl"
+          [autocomplete]="'off'"
+          [placeholder]="'Buscar (RFC, Razón social)'" />
+      </mat-form-field>
 
-                        <!-- Nombre -->
-                        <ng-container matColumnDef="razonSocial">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Razón social</th>
-                            <td mat-cell *matCellDef="let org">{{ org.razonSocial }}</td>
-                        </ng-container>
+      <!-- Refresh -->
+      <button mat-stroked-button (click)="reload()">
+        <mat-icon class="mr-2">refresh</mat-icon>
+        Actualizar
+      </button>
 
-                        <!-- Teléfono -->
-                        <ng-container matColumnDef="usoCfdi">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Uso CFDI</th>
-                            <td mat-cell *matCellDef="let org">{{ org.usoCfdi }}</td>
-                        </ng-container>
-
-                        <!-- Dirección -->
-                        <ng-container matColumnDef="moneda">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Moneda</th>
-                            <td mat-cell *matCellDef="let org">{{ org.moneda }}</td>
-                        </ng-container>
-
-                        <!-- Responsable -->
-                        <ng-container matColumnDef="estado">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
-                            <td mat-cell *matCellDef="let org">
-                                <mat-chip [color]="org.activo ? 'primary' : 'warn'" selected>
-                                    {{ org.activo ? 'Activo' : 'Inactivo' }}
-                                </mat-chip>
-                            </td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="acciones">
-                            <th mat-header-cell *matHeaderCellDef class="text-center">Acciones</th>
-                            <td mat-cell *matCellDef="let org" class="text-center">
-
-                                <!-- Facturar (acción principal) -->
-                                <button mat-icon-button color="primary" matTooltip="Facturar" (click)="facturar(org.clienteId)">
-                                    <mat-icon>receipt_long</mat-icon>
-                                </button>
-
-                                <!-- Editar -->
-                                <button mat-icon-button matTooltip="Editar cliente" (click)="editar(org)">
-                                    <mat-icon>edit</mat-icon>
-                                </button>
-
-                                <!-- Ver detalle -->
-                                <button mat-icon-button matTooltip="Ver detalle" (click)="verCliente(org.clienteId)">
-                                    <mat-icon>visibility</mat-icon>
-                                </button>
-
-                                <!-- Menú adicional -->
-                                <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Más acciones">
-                                    <mat-icon>more_vert</mat-icon>
-                                </button>
-
-                                <mat-menu #menu="matMenu">
-                                    <button mat-menu-item (click)="verCfdis(org)">
-                                        <mat-icon>description</mat-icon>
-                                        <span>Ver CFDIs</span>
-                                    </button>
-
-                                    <button mat-menu-item (click)="toggleActivo(org)">
-                                        <mat-icon>{{ org.activo ? 'lock' : 'lock_open' }}</mat-icon>
-                                        <span>{{ org.activo ? 'Desactivar' : 'Activar' }}</span>
-                                    </button>
-                                </mat-menu>
-
-                            </td>
-                        </ng-container>
-
-
-                        <!-- Encabezados y filas -->
-                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                    </table>
-                </div>
-            </div>
-
-
-        </div>
+      <!-- Add -->
+      <button mat-flat-button color="accent" (click)="nuevoCliente()">
+        <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+        <span class="ml-2 mr-1">Registrar cliente</span>
+      </button>
 
     </div>
+  </div>
 
+  <!-- Filters -->
+  <div class="mx-auto w-full max-w-screen-xl px-3 pt-4">
+    <div class="bg-card rounded-2xl shadow p-4">
+      <div class="grid grid-cols-12 gap-4">
 
+        <!-- Estado -->
+        <mat-form-field class="col-span-12 sm:col-span-3" appearance="fill">
+          <mat-label>Estado</mat-label>
+          <mat-select [formControl]="estadoControl">
+            <mat-option value="">Todos</mat-option>
+            <mat-option value="activos">Activos</mat-option>
+            <mat-option value="inactivos">Inactivos</mat-option>
+          </mat-select>
+        </mat-form-field>
 
+        <!-- Moneda (si aplica; si no aplica en clientes, puedes quitarlo) -->
+        <mat-form-field class="col-span-12 sm:col-span-3" appearance="fill">
+          <mat-label>Moneda</mat-label>
+          <mat-select [formControl]="monedaControl">
+            <mat-option value="">Todas</mat-option>
+            <mat-option value="MXN">MXN</mat-option>
+            <mat-option value="USD">USD</mat-option>
+          </mat-select>
+        </mat-form-field>
 
+        <!-- Uso CFDI (si aplica; si viene en tu data) -->
+        <mat-form-field class="col-span-12 sm:col-span-6" appearance="fill">
+          <mat-label>Uso CFDI</mat-label>
+          <mat-select [formControl]="usoCfdiControl">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let u of usoCfdiOptions" [value]="u">{{ u }}</mat-option>
+          </mat-select>
+        </mat-form-field>
 
+      </div>
+
+      <div class="flex justify-end gap-3 mt-2">
+        <button mat-stroked-button (click)="clearFilters()">Limpiar filtros</button>
+        <button mat-flat-button color="accent" (click)="applyFilters()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3">
+    <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+      <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+        <div class="mx-6 overflow-x-auto">
+
+          <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1 w-full table-fixed">
+
+  <!-- RFC -->
+  <ng-container matColumnDef="rfc">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header class="w-40">RFC</th>
+    <td mat-cell *matCellDef="let org">
+      <span class="font-medium">{{ org.rfc }}</span>
+    </td>
+  </ng-container>
+
+  <!-- Razón social -->
+  <ng-container matColumnDef="razonSocial">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Razón social</th>
+    <td mat-cell *matCellDef="let org" class="whitespace-nowrap">
+      <div class="flex flex-col">
+        <span class="font-medium truncate max-w-[360px]">{{ org.razonSocial }}</span>
+        <span class="text-secondary text-sm truncate max-w-[360px]">
+          {{ org.usoCfdi || '—' }}
+        </span>
+      </div>
+    </td>
+  </ng-container>
+
+  <!-- Moneda -->
+  <ng-container matColumnDef="moneda">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header class="w-28">Moneda</th>
+    <td mat-cell *matCellDef="let org">
+      {{ org.moneda || '—' }}
+    </td>
+  </ng-container>
+
+  <!-- Estado -->
+  <ng-container matColumnDef="estado">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header class="w-36">Estado</th>
+    <td mat-cell *matCellDef="let org">
+      <mat-chip [color]="org.activo ? 'primary' : 'warn'" selected>
+        {{ org.activo ? 'Activo' : 'Inactivo' }}
+      </mat-chip>
+    </td>
+  </ng-container>
+
+  <!-- Acciones -->
+  <ng-container matColumnDef="acciones">
+    <th mat-header-cell *matHeaderCellDef class="w-40 text-center">Acciones</th>
+    <td mat-cell *matCellDef="let org" class="text-center">
+
+      <!-- Facturar -->
+      <button mat-icon-button color="primary" matTooltip="Facturar" (click)="facturar(org.clienteId)">
+        <mat-icon>receipt_long</mat-icon>
+      </button>
+
+      <!-- Ver detalle -->
+      <button mat-icon-button matTooltip="Ver detalle" (click)="verCliente(org.clienteId)">
+        <mat-icon>visibility</mat-icon>
+      </button>
+
+      <!-- ✅ Menú POR FILA -->
+      <button mat-icon-button [matMenuTriggerFor]="menuRow" matTooltip="Más acciones">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+
+      <mat-menu #menuRow="matMenu">
+        <button mat-menu-item (click)="editar(org)">
+          <mat-icon>edit</mat-icon>
+          <span>Editar cliente</span>
+        </button>
+
+        <button mat-menu-item (click)="verCfdis(org)">
+          <mat-icon>description</mat-icon>
+          <span>Ver CFDIs</span>
+        </button>
+
+        <button mat-menu-item (click)="toggleActivo(org)">
+          <mat-icon>{{ org.activo ? 'lock' : 'lock_open' }}</mat-icon>
+          <span>{{ org.activo ? 'Desactivar' : 'Activar' }}</span>
+        </button>
+      </mat-menu>
+
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+</table>
+
+<!-- ✅ Empty state -->
+<div *ngIf="!isLoading && dataSource.filteredData.length === 0" class="p-6 text-center text-secondary">
+  No hay clientes para mostrar.
+</div>
+
+<mat-paginator [pageSizeOptions]="[10, 25, 50]" [pageSize]="10" showFirstLastButtons>
+</mat-paginator>
+
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>

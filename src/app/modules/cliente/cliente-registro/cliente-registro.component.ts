@@ -1,134 +1,156 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButton } from '@angular/material/button';
-import { MatOptionModule } from '@angular/material/core';
-import { MatDialog, MatDialogActions, MatDialogContent } from '@angular/material/dialog';
-import { MatFormField, MatFormFieldModule, MatLabel } from '@angular/material/form-field';
-import { MatIcon } from '@angular/material/icon';
+import { Router } from '@angular/router';
+import { debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
+
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatRadioModule } from '@angular/material/radio';
+import { MatIconModule } from '@angular/material/icon';
+
 import { AlertService } from 'app/services/alert.service';
-import { CatCategoriaService } from 'app/services/admin/catcategoria.service';
-import { CatPrioridadService } from 'app/services/admin/catprioridad.service';
-import { debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
-import { AreaService } from 'app/services/admin/area.service';
-import { OrganizacionService } from 'app/services/admin/organizacion.service';
-import { SeleccionAreaComponent } from 'app/modals/seleccion-area/seleccion-area.component';
-import { TicketService } from 'app/services/admin/ticket.service';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { Cliente_Catalogos } from 'app/services/cliente/cliente_catalogos.service';
-import { filter } from 'lodash';
-import { Cliente_Perfil } from 'app/services/cliente/cliente_perfil.service';
 import { Cliente_Clientes } from 'app/services/cliente/cliente_clientes.service';
-import { Router } from '@angular/router';
+import { AbstractControl, ValidationErrors } from '@angular/forms';
 
 @Component({
   selector: 'app-cliente-registro',
+  standalone: true,
   imports: [
-      MatSelectModule,
-      MatFormFieldModule,
-      MatOptionModule,
-      MatFormField,
-      MatLabel,
-      MatDialogActions,
-      MatDialogContent,
-      FormsModule,
-      ReactiveFormsModule,
-      MatFormFieldModule,
-      MatDatepickerModule,
-      MatRadioModule,
-      MatIcon,
-      MatTooltipModule,
-      MatButton,
-      MatInputModule,
-      CommonModule,
-      MatProgressSpinnerModule
-    ],
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatProgressBarModule,
+  ],
   templateUrl: './cliente-registro.component.html',
   styleUrl: './cliente-registro.component.scss'
 })
 export class ClienteRegistroComponent implements OnInit {
-  isLoading: boolean = false;
 
-  paises = [{id:'MXN', descripcion:'México'}]
-  regimenesFiscales = [];
-  
-  metodosPago = [];
-  formasPago = [];
-  monedas = [];
-  exportaciones = [];
-  usosCfdi = [];
+  isLoading = false;
 
-  colonias = [];
+  paises = [{ id: 'MX', descripcion: 'México' }];
+
+  regimenesFiscales: any[] = [];
+  metodosPago: any[] = [];
+  formasPago: any[] = [];
+  monedas: any[] = [];
+  exportaciones: any[] = [];
+  usosCfdi: any[] = [];
+
+  colonias: string[] = [];
 
   form: FormGroup;
+
   constructor(
     private fb: FormBuilder,
     private alertService: AlertService,
     private cliente_catalogos: Cliente_Catalogos,
     private cliente_clientes: Cliente_Clientes,
-    private organizacionService: OrganizacionService,
-    private ticketService: TicketService,
-    private areaService: AreaService,
-    private dialog: MatDialog,
     private router: Router
   ) {
-
-
     this.form = this.fb.group({
-      rfc: ['', Validators.required],
-      razonSocial: ['', Validators.required],
+      // Datos cliente
+      tipoPersona: ['M', [Validators.required]], // F | M
+      rfc: ['', [Validators.required, Validators.maxLength(13)]],
+      razonSocial: ['', [Validators.required, Validators.maxLength(250)]],
+      nombreComercial: ['', [Validators.maxLength(150)]],
       regimenFiscal: ['', Validators.required],
-      email: ['', Validators.required],
-      telefono: ['', Validators.required],
-      pais: ['', Validators.required],
-      codigoPostal: ['', Validators.required],
+      email: ['', [Validators.email, Validators.maxLength(50)]],
+      correosCc: ['', [Validators.maxLength(500), this.emailsListValidator]],
+      telefono: ['', [Validators.maxLength(50), Validators.pattern(/^[0-9+()\-\s]{7,20}$/)]],
+
+      // Dirección
+      pais: ['MX', Validators.required],
+      codigoPostal: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
       estado: ['', Validators.required],
       municipio: ['', Validators.required],
+      localidad: ['', [Validators.maxLength(80)]],
       colonia: ['', Validators.required],
-      calle: ['', Validators.required],
-      noExterior: ['', Validators.required],
-      noInterior: ['', Validators.required],
+      calle: ['', [Validators.required, Validators.maxLength(150)]],
+      referencia: ['', [Validators.maxLength(150)]],
+      noExterior: ['', [Validators.required, Validators.maxLength(50)]],
+      noInterior: ['', [Validators.maxLength(50)]], // opcional
 
+      // Config defaults
       metodoPago: [''],
       formaPago: [''],
       moneda: [''],
       exportacion: [''],
       usoCfdi: [''],
+
+      // Notas
+      notas: ['', [Validators.maxLength(500)]],
     });
   }
 
+
+  emailsListValidator(control: AbstractControl): ValidationErrors | null {
+    const value = (control.value || '').toString().trim();
+    if (!value) return null;
+
+    const emails = value.split(/[;,]/).map(x => x.trim()).filter(Boolean);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const invalid = emails.some(e => !emailRegex.test(e));
+    return invalid ? { emailsList: true } : null;
+  }
+
   ngOnInit(): void {
-    this.form.get('codigoPostal')!
-      .valueChanges
-      .pipe(
-        debounceTime(500),              // espera a que deje de escribir
-        distinctUntilChanged(),         // evita valores repetidos
-      )
-      .subscribe(cp => {
-        this.buscarCodigoPostal(cp);
+    this.form.get('rfc')!.valueChanges
+      .pipe(debounceTime(200), distinctUntilChanged())
+      .subscribe(v => {
+        const clean = (v || '').toUpperCase().replace(/\s+/g, '');
+        if (clean !== v) this.form.get('rfc')!.setValue(clean, { emitEvent: false });
       });
+
+    this.form.get('codigoPostal')!.valueChanges
+      .pipe(debounceTime(500), distinctUntilChanged())
+      .subscribe(cp => this.buscarCodigoPostal(cp));
 
     this.loadData();
   }
 
-
-  buscarCodigoPostal(codigoPostal: string): void {
-    this.cliente_catalogos.GetMunicipio(codigoPostal)
-      .subscribe(res => {
-        this.form.patchValue({
-          estado: res.estado,
-          municipio: res.municipio
-        });
-        this.colonias = res.colonia;
-      });
+  cancelar(): void {
+    // ajusta a tu ruta real
+    this.router.navigate(['/cliente/clientes']);
   }
 
-  loadData() {
+  buscarCodigoPostal(codigoPostal: string): void {
+    const cp = (codigoPostal || '').toString().trim();
+    if (!cp || cp.length < 5) return;
+
+    this.cliente_catalogos.GetMunicipio(cp).subscribe({
+      next: (res) => {
+        this.form.patchValue({
+          estado: res.estado,
+          municipio: res.municipio,
+          colonia: '' // resetea colonia si cambió CP
+        });
+        this.colonias = res.colonia || [];
+      },
+      error: () => {
+        // no revientes la pantalla por CP inválido
+        this.colonias = [];
+        this.form.patchValue({ estado: '', municipio: '', colonia: '' });
+      }
+    });
+  }
+
+  loadData(): void {
+    this.isLoading = true;
+
     forkJoin([
       this.cliente_catalogos.GetRegimenesFiscales(),
       this.cliente_catalogos.GetMetodoPago(),
@@ -145,63 +167,74 @@ export class ClienteRegistroComponent implements OnInit {
         catExportacionResponse,
         catUsosCfdiResponse
       ]) => {
-        this.regimenesFiscales = catRegimenFiscalResponse;
-        this.metodosPago = catMetodoPagoResponse;
-        this.formasPago = catFormaPagoResponse;
-        this.monedas = catMonedaResponse;
-        this.exportaciones = catExportacionResponse;
-        this.usosCfdi = catUsosCfdiResponse
+        this.regimenesFiscales = catRegimenFiscalResponse || [];
+        this.metodosPago = catMetodoPagoResponse || [];
+        this.formasPago = catFormaPagoResponse || [];
+        this.monedas = catMonedaResponse || [];
+        this.exportaciones = catExportacionResponse || [];
+        this.usosCfdi = catUsosCfdiResponse || [];
       },
-      complete: () => { },
       error: (err) => {
-        this.alertService.showError('Error', err.error);
+        this.alertService.showError('Error', err?.error || 'No se pudieron cargar catálogos');
+      },
+      complete: () => {
+        this.isLoading = false;
       }
     });
   }
 
-
-  actualizarDatos() {
+  actualizarDatos(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-    this.isLoading = true;
-    const payload = {
-      rfc: this.form.value.rfc,
-      razonSocial: this.form.value.razonSocial,
-      regimenFiscal: this.form.value.regimenFiscal,
-      email: this.form.value.email,
-      telefono: this.form.value.telefono,
-      pais: this.form.value.pais,
-      codigoPostal: this.form.value.codigoPostal,
-      municipio: this.form.value.municipio,
-      estado: this.form.value.estado,
-      colonia: this.form.value.colonia,
-      calle: this.form.value.calle,
-      noExterior: this.form.value.noExterior,
-      noInterior: this.form.value.noInterior,
 
-      metodoPago: this.form.value.metodoPago,
-      formaPago: this.form.value.formaPago,
-      moneda: this.form.value.moneda,
-      exportacion: this.form.value.exportacion,
-      usoCfdi: this.form.value.usoCfdi,
+    this.isLoading = true;
+
+    const v = this.form.value;
+    const payload = {
+      tipoPersona: v.tipoPersona,
+      rfc: v.rfc,
+      razonSocial: v.razonSocial,
+      nombreComercial: v.nombreComercial,
+      regimenFiscal: v.regimenFiscal,
+      email: v.email,
+      correosCc: v.correosCc,
+      telefono: v.telefono,
+
+      pais: v.pais,
+      codigoPostal: v.codigoPostal,
+      municipio: v.municipio,
+      estado: v.estado,
+      localidad: v.localidad,
+      colonia: v.colonia,
+      calle: v.calle,
+      referencia: v.referencia,
+      noExterior: v.noExterior,
+      noInterior: v.noInterior,
+
+      metodoPago: v.metodoPago,
+      formaPago: v.formaPago,
+      moneda: v.moneda,
+      exportacion: v.exportacion,
+      usoCfdi: v.usoCfdi,
+
+      notas: v.notas,
     };
 
-    this.cliente_clientes.CrearCliente(payload)
-      .subscribe({
-        next: () => {
-          // éxito
-          this.alertService.showSuccess('Portalito', 'Datos guardados con éxito');
-          this.isLoading = false;
-          this.form.reset();
-        },
-        error: (err) => {
-          this.alertService.showError('Error', err.error.message);
-          this.isLoading = false;
-        }
-      });
+    this.cliente_clientes.CrearCliente(payload).subscribe({
+      next: () => {
+        this.alertService.showSuccess('Portalito', 'Datos guardados con éxito');
+        this.form.reset({ pais: 'MX' });
+        this.colonias = [];
+        this.router.navigate(['/cliente/clientes']); // opcional: regresar al listado
+      },
+      error: (err) => {
+        this.alertService.showError('Error', err?.error?.message || 'No se pudo guardar el cliente');
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
   }
-  
-
 }

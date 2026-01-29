@@ -10,42 +10,52 @@ export class Cliente_Perfil {
 
   service: string = 'cliente/perfil';
 
-
   constructor(private http: HttpClient) { }
+  GetRazonesSociales() {
+    return this.http.get<any[]>(`${environment.apiUrl}/cliente/perfil/razones-sociales`);
+  }
 
+  UpsertRazonSocial(payload: any) {
+    return this.http.post<any>(`${environment.apiUrl}/cliente/perfil/razones-sociales`, payload);
+  }
 
-  crearRazonSocial(payload: any): Observable<any> {
+  DeleteRazonSocial(id: string) {
+    return this.http.delete<void>(`${environment.apiUrl}/cliente/perfil/razones-sociales/${id}`);
+  }
+
+  EnviarSellos(razonSocialId: string, req: any) {
     return this.http.post<any>(
-      `${environment.apiUrl}/${this.service}/crearRazonSocial`,
-      payload
+      `${environment.apiUrl}/cliente/perfil/razones-sociales/${razonSocialId}/sellos`,
+      req
     );
   }
 
-  GetRazonSocial(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/${this.service}/GetRazonSocial`);
-  }
-
-  enviarSellos(request: any) {
-    return this.http.post(
-      `${environment.apiUrl}/${this.service}/EnviarSellosDigitales`,
-      request
+  SubirSellosAFacturama(razonSocialId: string, force = false) {
+    return this.http.post<any>(
+      `${environment.apiUrl}/cliente/perfil/razones-sociales/${razonSocialId}/sellos/subir-facturama?force=${force}`,
+      {}
     );
   }
 
-  subirSellosAFacturama(force = false) {
+  GuardarSellos(razonSocialId: string, payload: any) {
   return this.http.post<any>(
-   `${environment.apiUrl}/${this.service}/SubirSellosAFacturama`,
-    {}
+    `${environment.apiUrl}/cliente/perfil/razones-sociales/${razonSocialId}/sellos`,
+    payload
   );
 }
 
-  descargarSellos(): Observable<Blob> {
+
+  DescargarSellos(razonSocialId: string) {
     return this.http.get(
-     `${environment.apiUrl}/${this.service}/DescargarSellos`,
-      {
-        responseType: 'blob'
-      }
+      `${environment.apiUrl}/cliente/perfil/razones-sociales/${razonSocialId}/sellos/descargar`,
+      { responseType: 'blob' }
     );
   }
 
+  SetDefaultRazonSocial(razonSocialId: string) {
+  return this.http.post<any>(
+    `${environment.apiUrl}/cliente/perfil/razones-sociales/${razonSocialId}/default`,
+    {}
+  );
+}
 }

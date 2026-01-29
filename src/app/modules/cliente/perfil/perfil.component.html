@@ -1,234 +1,310 @@
 <div class="flex w-full flex-auto flex-col">
-    <div class="p-4">
-        <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3 ">
-            <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
-                <!-- Recent transactions table -->
-                <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
-                    <div class="mx-6">
-                        <br />
-                        <h2 class="text-3xl font-semibold leading-8 tracking-tight">
-                            Información personal
-                        </h2>
-                        <br />
-                        <div class="space-y-6" [formGroup]="form">
-                            <br />
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                                <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                                    <!-- Upload -->
-                                    <div class="flex flex-col gap-2">
-                                        <label class="font-medium">Adjuntar logo</label>
-                                        <input type="file" accept="image/*" (change)="onLogoSelected($event)"
-                                            class="block w-full text-sm" />
-                                    </div>
-                                    <!-- Preview (col-span 2) -->
-                                    <div class="md:col-span-2">
-                                        <div
-                                            class="flex h-40 w-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 text-center">
-                                            <!-- Si hay imagen -->
-                                            <img *ngIf="logoPreview" [src]="logoPreview"
-                                                class="max-h-full max-w-full object-contain rounded-lg" />
-                                            <!-- Placeholder -->
-                                            <div *ngIf="!logoPreview" class="text-gray-500">
-                                                <p class="font-medium">Sube tu logo aquí</p>
-                                                <p class="text-sm">PNG, JPG o JPEG</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:col-span-2">
-                                    <!-- rfc -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>RFC</mat-label>
-                                        <input
-                                            (input)="form.get('rfc')?.setValue($event.target.value.toUpperCase(), { emitEvent: false })"
-                                            maxlength="13" matInput formControlName="rfc" />
-                                        <mat-error *ngIf="form.get('rfc')?.hasError('required')">
-                                            El RFC es obligatorio
-                                        </mat-error>
 
-                                        <mat-error
-                                            *ngIf="form.get('rfc')?.hasError('minlength') || form.get('rfc')?.hasError('maxlength')">
-                                            El RFC debe tener 12 o 13 caracteres
-                                        </mat-error>
+  <!-- Header -->
+  <div class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
 
-                                        <mat-error *ngIf="form.get('rfc')?.hasError('pattern')">
-                                            El RFC no tiene un formato válido
-                                        </mat-error>
-                                    </mat-form-field>
+    @if (isLoading) {
+      <div class="absolute inset-x-0 bottom-0">
+        <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+      </div>
+    }
 
-                                    <!-- Razón social -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Razón social</mat-label>
-                                        <input matInput formControlName="razonSocial" />
-                                    </mat-form-field>
-
-                                    <!-- Régimen fiscal -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Régimen fiscal</mat-label>
-                                        <mat-select formControlName="regimenFiscal">
-                                            <mat-option [value]="''">Seleccione...</mat-option>
-
-                                            <mat-option *ngFor="let cat of regimenesFiscalesFiltrados" [value]="cat.id">
-                                                {{ cat.regimenFiscal }}-{{ cat.descripcion }}
-                                            </mat-option>
-                                        </mat-select>
-                                    </mat-form-field>
-
-                                    <!-- Razón social -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Celular para notificaciones</mat-label>
-                                        <input matInput formControlName="celularNotificaciones" />
-                                    </mat-form-field>
-
-                                    <!-- Razón social -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Folio de inicio</mat-label>
-                                        <input matInput formControlName="folioInicio" />
-                                    </mat-form-field>
-
-                                </div>
-                            </div>
-
-                            <h2 class="text-3xl font-semibold leading-8 tracking-tight">
-                                Dirección fiscal
-                            </h2>
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:col-span-2">
-
-                                <!-- rfc -->
-                                <mat-form-field appearance="fill" class="w-full">
-                                    <mat-label>Codigo postal</mat-label>
-                                    <input matInput formControlName="codigoPostal" />
-                                </mat-form-field>
-
-                                <!-- Municipio -->
-                                <mat-form-field appearance="fill" class="w-full">
-                                    <mat-label>Municipio</mat-label>
-                                    <input matInput formControlName="municipio" readonly="" />
-                                </mat-form-field>
-
-                                <!-- Estado -->
-                                <mat-form-field appearance="fill" class="w-full">
-                                    <mat-label>Estado</mat-label>
-                                    <input matInput formControlName="estado" readonly="" />
-                                </mat-form-field>
-
-                                <!-- Colonia -->
-                                <mat-form-field appearance="fill" class="w-full">
-                                    <mat-label>Colonia</mat-label>
-                                    <mat-select formControlName="colonia">
-                                        <mat-option [value]="''">Seleccione...</mat-option>
-                                        <mat-option *ngFor="let colonia of colonias" [value]="colonia">
-                                            {{ colonia }}
-                                        </mat-option>
-                                    </mat-select>
-                                </mat-form-field>
-
-                                <!-- Calle -->
-                                <mat-form-field appearance="fill" class="w-full">
-                                    <mat-label>calle</mat-label>
-                                    <input matInput formControlName="calle" />
-                                </mat-form-field>
-
-                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-
-                                    <!-- Numero interior -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Número interior</mat-label>
-                                        <input matInput formControlName="noInterior" />
-                                    </mat-form-field>
-
-                                    <!-- Numero exterior -->
-                                    <mat-form-field appearance="fill" class="w-full">
-                                        <mat-label>Número exterior</mat-label>
-                                        <input matInput formControlName="noExterior" />
-                                    </mat-form-field>
-                                </div>
-                            </div>
-                            <!-- Enviar -->
-                            <div class="flex justify-end space-x-2 mt-4">
-                                <button mat-raised-button class="fuse-mat-button" [color]="'accent'"
-                                    [disabled]="form.invalid || isLoading" (click)="actualizarDatos()">
-
-                                    <ng-container *ngIf="!isLoading; else loadingTpl">
-                                        Guardar cambios
-                                    </ng-container>
-
-                                    <ng-template #loadingTpl>
-                                        <mat-progress-spinner diameter="20" mode="indeterminate">
-                                        </mat-progress-spinner>
-                                    </ng-template>
-                                </button>
-                            </div>
-                        </div>
-                        <h2 class="text-3xl font-semibold leading-8 tracking-tight">
-                            Sellos digitales
-                        </h2>
-                        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                            <!-- Numero interior -->
-                            <mat-form-field appearance="fill" class="w-full">
-                                <mat-label>Contraseña</mat-label>
-                                <input matInput type="password" [(ngModel)]="passwordKey" />
-                            </mat-form-field>
-                            <!-- Upload -->
-                            <div class="flex flex-col gap-2">
-                                <label class="font-medium">Archivo .CER</label>
-                                <input type="file" accept=".cer" (change)="onCerSelected($event)"
-                                    class="block w-full text-sm" />
-                            </div>
-                            <!-- Upload -->
-                            <div class="flex flex-col gap-2">
-                                <label class="font-medium">Archivo .KEY</label>
-                                <input type="file" accept=".key" (change)="onKeySelected($event)"
-                                    class="block w-full text-sm" />
-                            </div>
-
-                        </div>
-                        <!-- Enviar -->
-                        <div class="flex justify-end space-x-2 mt-4">
-                            <!--
-                                <button mat-raised-button class="fuse-mat-button" [color]="'accent'"
-                                   [disabled]="!cerBase64 || !keyBase64 || !passwordKey || isLoading">
-                                    @if (!form.disabled) {
-                                    <span> Subir sellos digitales</span>
-                                    }
-                                    @if (form.disabled) {
-                                    <mat-progress-spinner [diameter]="24"
-                                        [mode]="'indeterminate'"></mat-progress-spinner>
-                                    }
-                                </button>-->
-                            <button type="button" mat-raised-button class="fuse-mat-button" [color]="'accent'"
-                                [disabled]="!cerBase64 || !keyBase64 || !passwordKey || isLoading"
-                                (click)="enviarSellos()">
-
-                                <ng-container *ngIf="!isLoading; else loadingTpl">
-                                    Enviar sellos
-                                </ng-container>
-
-                                <ng-template #loadingTpl>
-                                    <mat-progress-spinner diameter="20" mode="indeterminate">
-                                    </mat-progress-spinner>
-                                </ng-template>
-                            </button>
-
-                            <button mat-raised-button color="primary" (click)="descargarSellos()"
-                                [disabled]="isLoading">
-
-                                <ng-container *ngIf="!isLoading; else loadingTpl">
-                                    Descargar sellos
-                                </ng-container>
-
-                                <ng-template #loadingTpl>
-                                    <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
-                                </ng-template>
-
-                            </button>
-
-                        </div>
-                        <br /><br />
-
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div>
+      <h2 class="text-3xl font-semibold leading-8 tracking-tight">Emisores</h2>
+      <div class="text-secondary font-medium tracking-tight">
+        Administra tus emisores (razones sociales), configuración de emisión y sellos digitales
+      </div>
     </div>
+
+    <div class="mt-6 flex shrink-0 items-center gap-3 sm:ml-4 sm:mt-0">
+      <button mat-stroked-button (click)="reload()">
+        <mat-icon class="mr-2">refresh</mat-icon>
+        Actualizar
+      </button>
+
+      <button mat-flat-button color="accent" (click)="agregarRazonSocial()">
+        <mat-icon class="mr-2">add</mat-icon>
+        Agregar emisor
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Content -->
+  <div class="mx-auto w-full max-w-screen-xl p-3">
+
+    <div class="bg-card rounded-2xl shadow p-4">
+
+      <mat-accordion class="w-full" [multi]="true">
+
+        <mat-expansion-panel
+          *ngFor="let rs of razonesSociales.controls; let i = index"
+          [expanded]="i === selectedIndex"
+          (opened)="selectedIndex = i">
+
+          <!-- Panel Header -->
+          <mat-expansion-panel-header>
+            <mat-panel-title class="flex items-center gap-3">
+
+              <mat-chip selected [color]="rs.value.esDefault ? 'primary' : (rs.value.activa ? 'primary' : 'warn')">
+                {{ rs.value.esDefault ? 'Predeterminado' : (rs.value.activa ? 'Activo' : 'Inactivo') }}
+              </mat-chip>
+
+              <span class="font-medium">
+                {{ rs.value.nombreComercial || rs.value.razonSocial || 'Nuevo emisor' }}
+              </span>
+
+              <span class="text-secondary text-sm font-mono">
+                {{ rs.value.rfc || '' }}
+              </span>
+
+            </mat-panel-title>
+
+            <mat-panel-description class="hidden sm:flex justify-end">
+              <span class="text-secondary text-sm">Emisor</span>
+            </mat-panel-description>
+
+          </mat-expansion-panel-header>
+
+          <div class="space-y-6" [formGroup]="rs">
+
+            <!-- Datos del emisor -->
+            <div>
+              <h3 class="text-xl font-semibold mb-2">Datos del emisor</h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- RFC -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>RFC</mat-label>
+                  <input matInput formControlName="rfc" maxlength="13"
+                         (input)="uppercaseNoEmit(rs, 'rfc', $event)" />
+                  <mat-error *ngIf="rs.get('rfc')?.hasError('required')">RFC obligatorio</mat-error>
+                  <mat-error *ngIf="rs.get('rfc')?.hasError('pattern')">RFC inválido</mat-error>
+                  <mat-hint>Se usa para timbrado y validación SAT</mat-hint>
+                </mat-form-field>
+
+                <!-- Razón social -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Razón social</mat-label>
+                  <input matInput formControlName="razonSocial" />
+                  <mat-error *ngIf="rs.get('razonSocial')?.hasError('required')">Obligatorio</mat-error>
+                </mat-form-field>
+
+                <!-- Nombre comercial (opcional) -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Nombre comercial (opcional)</mat-label>
+                  <input matInput formControlName="nombreComercial" />
+                  <mat-hint>Se usa para mostrar en UI/PDF</mat-hint>
+                </mat-form-field>
+
+                <!-- Régimen -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Régimen fiscal</mat-label>
+                  <mat-select formControlName="regimenFiscalId">
+                    <mat-option [value]="''">Seleccione...</mat-option>
+                    <mat-option *ngFor="let cat of regimenesFiscalesFiltrados(i)" [value]="cat.id">
+                      {{ cat.regimenFiscal }}-{{ cat.descripcion }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="rs.get('regimenFiscalId')?.hasError('required')">Obligatorio</mat-error>
+                </mat-form-field>
+
+                <!-- Email emisor (recomendado) -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Email del emisor</mat-label>
+                  <input matInput formControlName="emailEmisor" />
+                  <mat-error *ngIf="rs.get('emailEmisor')?.hasError('required')">Obligatorio</mat-error>
+                  <mat-error *ngIf="rs.get('emailEmisor')?.hasError('email')">Email inválido</mat-error>
+                  <mat-hint>Para envíos/plantillas de correo</mat-hint>
+                </mat-form-field>
+
+                <!-- Teléfono emisor (opcional) -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Teléfono (opcional)</mat-label>
+                  <input matInput formControlName="telefonoEmisor" />
+                  <mat-error *ngIf="rs.get('telefonoEmisor')?.hasError('pattern')">Teléfono inválido</mat-error>
+                  <mat-hint>Solo números, 7 a 15 dígitos</mat-hint>
+                </mat-form-field>
+
+                <!-- Estado -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Estado</mat-label>
+                  <mat-select formControlName="activa" [disabled]="rs.value.esDefault">
+                    <mat-option [value]="true">Activo</mat-option>
+                    <mat-option [value]="false">Inactivo</mat-option>
+                  </mat-select>
+                  <mat-hint *ngIf="rs.value.esDefault">El emisor predeterminado no se puede desactivar</mat-hint>
+                </mat-form-field>
+
+              </div>
+            </div>
+
+            <!-- Configuración de emisión -->
+            <div>
+              <h3 class="text-xl font-semibold mb-2">Configuración de emisión</h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- Serie ingreso -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Serie default (Factura)</mat-label>
+                  <input matInput formControlName="serieIngresoDefault" maxlength="10"
+                         (input)="uppercaseNoEmit(rs, 'serieIngresoDefault', $event)" />
+                  <mat-error *ngIf="rs.get('serieIngresoDefault')?.hasError('required')">Obligatorio</mat-error>
+                  <mat-error *ngIf="rs.get('serieIngresoDefault')?.hasError('pattern')">Solo A-Z/0-9, sin espacios</mat-error>
+                  <mat-hint>Ej. A, F, ING2026</mat-hint>
+                </mat-form-field>
+
+                <!-- Serie egreso -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Serie default (Nota de crédito) (opcional)</mat-label>
+                  <input matInput formControlName="serieEgresoDefault" maxlength="10"
+                         (input)="uppercaseNoEmit(rs, 'serieEgresoDefault', $event)" />
+                  <mat-error *ngIf="rs.get('serieEgresoDefault')?.hasError('pattern')">Solo A-Z/0-9, sin espacios</mat-error>
+                  <mat-hint>Ej. NC, E, CRE2026</mat-hint>
+                </mat-form-field>
+
+                <!-- Lugar de expedición -->
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>CP Lugar de expedición (opcional)</mat-label>
+                  <input matInput formControlName="cpLugarExpedicionDefault" maxlength="5" />
+                  <mat-error *ngIf="rs.get('cpLugarExpedicionDefault')?.hasError('pattern')">Debe ser 5 dígitos</mat-error>
+                  <mat-hint>Si lo dejas vacío, se usará el CP fiscal</mat-hint>
+                </mat-form-field>
+
+              </div>
+
+              <div class="flex justify-end gap-3 mt-3">
+
+                <button mat-stroked-button
+                        [disabled]="!rs.value.id || rs.value.esDefault || isLoading"
+                        (click)="hacerPredeterminado(i)">
+                  <mat-icon class="mr-2">star</mat-icon>
+                  Hacer predeterminado
+                </button>
+
+                <button mat-stroked-button color="warn"
+                        (click)="eliminarRazonSocial(i)"
+                        [disabled]="rs.value.esDefault || isLoading">
+                  <mat-icon class="mr-2">delete</mat-icon>
+                  Eliminar
+                </button>
+
+                <button mat-flat-button color="accent"
+                        (click)="guardarRazonSocial(i)"
+                        [disabled]="isLoading">
+                  <mat-icon class="mr-2">save</mat-icon>
+                  Guardar
+                </button>
+
+              </div>
+            </div>
+
+            <!-- Dirección fiscal -->
+            <div class="border-t pt-6">
+              <h3 class="text-xl font-semibold mb-2">Dirección fiscal</h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Código postal</mat-label>
+                  <input matInput formControlName="codigoPostal" maxlength="5" />
+                  <mat-error *ngIf="rs.get('codigoPostal')?.hasError('required')">Obligatorio</mat-error>
+                  <mat-error *ngIf="rs.get('codigoPostal')?.hasError('pattern')">Debe ser 5 dígitos</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Estado</mat-label>
+                  <input matInput formControlName="estado" readonly />
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Municipio</mat-label>
+                  <input matInput formControlName="municipio" readonly />
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Colonia</mat-label>
+                  <mat-select formControlName="colonia">
+                    <mat-option [value]="''">Seleccione...</mat-option>
+                    <mat-option *ngFor="let col of (rs.get('colonias')?.value || [])" [value]="col">
+                      {{ col }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="rs.get('colonia')?.hasError('required')">Obligatorio</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Calle</mat-label>
+                  <input matInput formControlName="calle" />
+                  <mat-error *ngIf="rs.get('calle')?.hasError('required')">Obligatorio</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>No. Exterior</mat-label>
+                  <input matInput formControlName="noExterior" />
+                  <mat-error *ngIf="rs.get('noExterior')?.hasError('required')">Obligatorio</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>No. Interior</mat-label>
+                  <input matInput formControlName="noInterior" />
+                </mat-form-field>
+
+              </div>
+            </div>
+
+            <!-- Sellos digitales -->
+            <div class="border-t pt-6">
+              <h3 class="text-xl font-semibold mb-2">Sellos digitales (CSD) — por emisor</h3>
+              <div class="text-secondary text-sm mb-4">
+                Selecciona CER/KEY y contraseña para este emisor. Se guardarán y se subirán a Facturama.
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <mat-form-field appearance="fill" class="w-full">
+                  <mat-label>Contraseña de la llave</mat-label>
+                  <input matInput type="password" [value]="getSellos(i).password"
+                         (input)="setPassword(i, $event.target.value)" />
+                </mat-form-field>
+
+                <div class="flex flex-col gap-2">
+                  <label class="font-medium">Archivo .CER</label>
+                  <input type="file" accept=".cer" (change)="onCerSelected(i, $event)" class="block w-full text-sm" />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <label class="font-medium">Archivo .KEY</label>
+                  <input type="file" accept=".key" (change)="onKeySelected(i, $event)" class="block w-full text-sm" />
+                </div>
+
+              </div>
+
+              <div class="flex justify-end gap-3 mt-3">
+
+                <button mat-stroked-button (click)="descargarSellos(i)" [disabled]="isLoading">
+                  <mat-icon class="mr-2">download</mat-icon>
+                  Descargar sellos
+                </button>
+
+                <button mat-flat-button color="accent"
+                        [disabled]="!canEnviarSellos(i) || isLoading"
+                        (click)="enviarSellos(i)">
+                  <mat-icon class="mr-2">upload</mat-icon>
+                  Enviar sellos
+                </button>
+
+              </div>
+            </div>
+
+          </div>
+
+        </mat-expansion-panel>
+      </mat-accordion>
+
+    </div>
+
+  </div>
 </div>
