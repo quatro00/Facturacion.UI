@@ -35,6 +35,7 @@ import { HttpResponse } from '@angular/common/http';
 import { CancelCfdiDialogComponent } from 'app/modals/cancel-cfdi-dialog/cancel-cfdi-dialog.component';
 import { ReenviarCfdiDialogDataComponent } from 'app/modals/reenviar-cfdi-dialog-data/reenviar-cfdi-dialog-data.component';
 import { ReenviarCfdiDialogResult } from 'app/shared/models/cliente_facturacion/ReenviarCfdi.models';
+import { SeleccionNotaCreditoDialogComponent } from 'app/modals/seleccion-nota-credito-dialog/seleccion-nota-credito-dialog.component';
 
 
 type CfdiStatus = 'Activo' | 'CANCELADO';
@@ -59,6 +60,10 @@ export interface CfdiRow {
   total: number;
 
   estatus: CfdiStatus;
+cfdiOrigenId?: string | null;
+  origenSerie?: string | null;
+  origenFolio?: string | null;
+  origenUuid?: string | null;
 
 }
 
@@ -108,7 +113,15 @@ export class CfdisListComponent implements AfterViewInit {
 
   isLoading = false;
 
-  displayedColumns = ['fecha', 'serieFolio', 'receptor', 'uuid', 'total', 'estatus', 'acciones'];
+  displayedColumns = [ 'fecha',
+  'serieFolio',
+  'tipo',
+  'relacion',     // 👈 nuevo
+  'receptor',
+  'uuid',
+  'total',
+  'estatus',
+  'acciones'];
 
   dataSource = new MatTableDataSource<CfdiRow>([]);
 
@@ -346,6 +359,21 @@ export class CfdisListComponent implements AfterViewInit {
             },
           });
       });
+  }
+
+  generarNotaCredito(cfdi: CfdiRow): void {
+    const dialogRef = this.dialog.open(SeleccionNotaCreditoDialogComponent, {
+      width: '420px',
+      disableClose: true,
+      data: { cfdi }
+    });
+
+    dialogRef.afterClosed().subscribe((res) => {
+      if (res) {
+        // refresca lista
+        this.applyFilters();
+      }
+    });
   }
 
   cancelarCfdi(c: CfdiRow): void {

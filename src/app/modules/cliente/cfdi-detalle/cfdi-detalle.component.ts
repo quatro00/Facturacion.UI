@@ -17,6 +17,7 @@ import { Cliente_Factura } from 'app/services/cliente/cliente_factura.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ReenviarCfdiDialogDataComponent } from 'app/modals/reenviar-cfdi-dialog-data/reenviar-cfdi-dialog-data.component';
 import { ReenviarCfdiDialogResult } from 'app/shared/models/cliente_facturacion/ReenviarCfdi.models';
+import { CancelCfdiDialogComponent } from 'app/modals/cancel-cfdi-dialog/cancel-cfdi-dialog.component';
 
 
 @Component({
@@ -251,7 +252,47 @@ export class CfdiDetalleComponent {
 
   cancelarCfdi(): void {
     if (!this.cfdi) return;
-    console.log('cancelarCfdi', this.cfdi.id);
+    
+    const ref = this.dialog.open(CancelCfdiDialogComponent, {
+          width: '520px',
+          disableClose: true,
+          data: {
+            uuid: this.cfdi.uuid,
+            serie: this.cfdi.serie,
+            folio: this.cfdi.folio,
+            receptorRfc: this.cfdi.rfcReceptor,
+            total: this.cfdi.total,
+          }
+        });
+    
+        ref.afterClosed()
+          .pipe(filter((r) => r != null))
+          .subscribe((result: any) => {
+            this.cancelandoId = this.cfdi.id;
+    
+            this.facturasService.cancelCfdi(this.cfdi.id, {
+              motive: result.motive,
+              uuidReplacement: result.uuidReplacement ?? null,
+            })
+              .pipe(finalize(() => (this.cancelandoId = null)))
+              .subscribe({
+                next: (r) => {
+                  // Ajusta al nombre real de tu estatus en UI
+                  const s = (r.status ?? '').toLowerCase();
+                  if (s === 'canceled' || s === 'cancelled') this.cfdi.estatus = 'CANCELADO' as any;
+                  else if (s === 'requested') this.cfdi.estatus = 'CANCELACION_SOLICITADA' as any;
+                  else if (s === 'rejected') this.cfdi.estatus = 'CANCELACION_RECHAZADA' as any;
+    
+                  // opcional: refrescar grid desde backend si prefieres
+                  // this.loadFacturas();
+    
+                  console.log('Cancelación OK', r);
+                },
+                error: (err) => {
+                  console.error(err);
+                }
+              });
+          });
   }
 
   trackById(_: number, x: CfdiConceptoDto): string {

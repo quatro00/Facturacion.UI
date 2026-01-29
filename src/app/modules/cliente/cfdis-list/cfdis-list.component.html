@@ -106,12 +106,12 @@
       <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
         <div class="mx-6 overflow-x-auto">
 
-          <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1 w-full min-w-max">
+          <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1 w-full table-fixed">
 
             <!-- Fecha -->
             <ng-container matColumnDef="fecha">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
-              <td mat-cell *matCellDef="let c">{{ c.fecha | date:'yyyy-MM-dd HH:mm' }}</td>
+              <td mat-cell *matCellDef="let c">{{ c.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
             </ng-container>
 
             <!-- Serie/Folio -->
@@ -156,7 +156,37 @@
                 </mat-chip>
               </td>
             </ng-container>
+<ng-container matColumnDef="tipo">
+  <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo</th>
+  <td mat-cell *matCellDef="let c">
+    <mat-chip selected [color]="c.tipo === 'E' ? 'warn' : 'primary'">
+      <ng-container [ngSwitch]="c.tipo">
+        <span *ngSwitchCase="'I'">Factura</span>
+        <span *ngSwitchCase="'E'">Nota de crédito</span>
+        <span *ngSwitchCase="'P'">Pago</span>
+        <span *ngSwitchCase="'T'">Traslado</span>
+        <span *ngSwitchDefault>{{ c.tipo }}</span>
+      </ng-container>
+    </mat-chip>
+  </td>
+</ng-container>
+            <ng-container matColumnDef="relacion">
+  <th mat-header-cell *matHeaderCellDef>Relacionado</th>
+  <td mat-cell *matCellDef="let c" class="whitespace-nowrap">
+    <ng-container *ngIf="c.tipo === 'E'; else noRel">
+      <span class="text-secondary text-sm">
+        NC de:
+        <span class="font-medium">
+          {{ c.origenSerie }}-{{ c.origenFolio }}
+        </span>
+      </span>
+    </ng-container>
 
+    <ng-template #noRel>
+      <span class="text-secondary text-sm">—</span>
+    </ng-template>
+  </td>
+</ng-container>
             <!-- Acciones -->
             <ng-container matColumnDef="acciones">
               <th mat-header-cell *matHeaderCellDef class="text-center">Acciones</th>
@@ -198,6 +228,13 @@
                   <button mat-menu-item *ngIf="c.estatus === 'CANCELADO'" (click)="downloadAcuse(c)">
                     <mat-icon>assignment_turned_in</mat-icon>
                     <span>Descargar acuse de cancelación</span>
+                  </button>
+
+                  <button mat-menu-item (click)="generarNotaCredito(c)"
+                    *ngIf="c.estatus === 'TIMBRADO' && c.tipo === 'I'">
+
+                    <mat-icon color="warn">receipt_long</mat-icon>
+                    <span>Generar nota de crédito</span>
                   </button>
 
                   <button mat-menu-item (click)="copiarUuid(c)">

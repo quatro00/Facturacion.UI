@@ -1,0 +1,31 @@
+<h2 mat-dialog-title>Nota de crédito</h2>
+
+<mat-dialog-content class="flex flex-col gap-4">
+
+  <p class="text-sm text-gray-600">
+    Selecciona el tipo de nota de crédito que deseas generar
+  </p>
+
+  <mat-radio-group [(ngModel)]="tipo" class="flex flex-col gap-2">
+    <mat-radio-button value="TOTAL">
+      Nota de crédito total
+    </mat-radio-button>
+
+    <mat-radio-button value="PARCIAL">
+      Nota de crédito parcial (por conceptos)
+    </mat-radio-button>
+  </mat-radio-group>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="dialogRef.close()">Cancelar</button>
+
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="!tipo"
+    (click)="continuar()">
+    Continuar
+  </button>
+</mat-dialog-actions>

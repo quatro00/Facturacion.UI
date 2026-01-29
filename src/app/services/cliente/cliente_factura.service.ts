@@ -3,6 +3,7 @@ import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'environments/environment';
 import { CfdiDetalleDto } from 'app/shared/models/cliente_facturacion/CfdiDetalleDto';
+import { CfdiCreadoDto } from 'app/shared/models/cliente_facturacion/facturacion.models';
 
 @Injectable({
   providedIn: 'root'
@@ -93,4 +94,11 @@ export class Cliente_Factura {
   getCfdiDetalle(id: string): Observable<CfdiDetalleDto> {
     return this.http.get<CfdiDetalleDto>(`${environment.apiUrl}/${this.service}/${id}`);
   }
+
+  crearNotaCreditoTotal(cfdiId: string): Observable<CfdiCreadoDto> {
+  return this.http.post<CfdiCreadoDto>(
+    `${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/notas-credito/total`,
+    {}
+  );
+}
 }
