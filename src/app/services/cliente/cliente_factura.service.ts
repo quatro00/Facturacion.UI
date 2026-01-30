@@ -95,10 +95,9 @@ export class Cliente_Factura {
     return this.http.get<CfdiDetalleDto>(`${environment.apiUrl}/${this.service}/${id}`);
   }
 
-  crearNotaCreditoTotal(cfdiId: string): Observable<CfdiCreadoDto> {
+  crearNotaCreditoTotal(cfdiId: string, razonSocialId: string | null): Observable<CfdiCreadoDto> {
   return this.http.post<CfdiCreadoDto>(
-    `${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/notas-credito/total`,
-    {}
+    `${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/notas-credito/total`,{ razonSocialId }
   );
 }
 }

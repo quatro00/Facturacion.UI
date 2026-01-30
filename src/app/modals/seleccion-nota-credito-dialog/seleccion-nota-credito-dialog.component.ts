@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Cliente_Factura } from 'app/services/cliente/cliente_factura.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CfdiCreadoDto } from 'app/shared/models/cliente_facturacion/facturacion.models';
+import { EmisorService } from 'app/core/emisor/emisor.service';
 
 @Component({
   selector: 'app-seleccion-nota-credito-dialog',
@@ -33,6 +34,7 @@ export class SeleccionNotaCreditoDialogComponent {
     public dialogRef: MatDialogRef<SeleccionNotaCreditoDialogComponent>,
     private clienteFactura: Cliente_Factura,
     private snackBar: MatSnackBar,
+    private emisorService: EmisorService
   ) {}
 
   cerrar(): void {
@@ -51,10 +53,11 @@ export class SeleccionNotaCreditoDialogComponent {
   }
 
   generarNotaCreditoTotal(): void {
+    const emisorId = this.emisorService.emisorId;
     console.log('Generar nota de crédito TOTAL para CFDI:', this.data.cfdi);
     this.isLoading = true;
 
-    this.clienteFactura.crearNotaCreditoTotal(this.data.cfdi.id).subscribe({
+    this.clienteFactura.crearNotaCreditoTotal(this.data.cfdi.id, emisorId).subscribe({
       next: (res: CfdiCreadoDto) => {
         this.isLoading = false;
         this.snackBar.open(
