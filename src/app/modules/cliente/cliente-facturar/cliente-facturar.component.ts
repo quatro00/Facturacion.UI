@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
+import { Observable, Subscription, forkJoin, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
-import { FormGroup } from '@angular/forms';
+
 // Material
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,14 +17,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTable, MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+
 import { Cliente_Clientes } from 'app/services/cliente/cliente_clientes.service';
-import { forkJoin } from 'rxjs';
 import { Cliente_Catalogos } from 'app/services/cliente/cliente_catalogos.service';
 import { AlertService } from 'app/services/alert.service';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
-//import { ClientesService } from 'app/core/clientes/clientes.service';
-//import { CfdisService } from 'app/core/cfdis/cfdis.service';
+// ✅ Emisor
+import { EmisorService, EmisorLite } from 'app/core/emisor/emisor.service';
+import { Cliente_Perfil } from 'app/services/cliente/cliente_perfil.service';
 
 @Component({
   selector: 'app-cliente-facturar',
@@ -39,59 +41,25 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
     MatIconModule,
     MatDividerModule,
     MatProgressSpinnerModule,
-    MatTableModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatAutocompleteModule,
-    MatInputModule,
-    MatFormFieldModule
+    MatSnackBarModule,
   ],
   templateUrl: './cliente-facturar.component.html',
   styles: [
-    /* language=SCSS */
     `
-           .col-clave-prod {
-  width: 140px;
-}
-
-.col-descripcion {
-  width: 100%;
-  min-width: 320px;
-}
-
-.col-cantidad {
-  width: 30px;
-}
-
-.col-unitario {
-  width: 120px;
-}
-
-.col-unidad {
-  width: 70px;
-}
-
-.col-importe {
-  width: 120px;
-}
-
-.col-acciones {
-  width: 70px;
-}
-
-:host ::ng-deep .dense .mat-mdc-form-field-infix {
-  padding-top: 6px !important;
-  padding-bottom: 6px !important;
-  min-height: 36px;
-}
-
-:host ::ng-deep .dense .mat-mdc-text-field-wrapper {
-  height: 40px;
-}
-        `,
+      .col-clave-prod { width: 140px; }
+      .col-descripcion { width: 100%; min-width: 320px; }
+      .col-cantidad { width: 30px; }
+      .col-unitario { width: 120px; }
+      .col-unidad { width: 70px; }
+      .col-importe { width: 120px; }
+      .col-acciones { width: 70px; }
+    `,
   ],
 })
-export class ClienteFacturarComponent implements OnInit {
+export class ClienteFacturarComponent implements OnInit, OnDestroy {
   clienteId!: string;
   cliente: any;
 
@@ -99,28 +67,35 @@ export class ClienteFacturarComponent implements OnInit {
   isLoading = false;
   isSubmitting = false;
 
-  metodosPago = [];
-  formasPago = [];
-  monedas = [];
-  exportaciones = [];
-  usosCfdi = [];
-  regimenesFiscales = [];
+  metodosPago: any[] = [];
+  formasPago: any[] = [];
+  monedas: any[] = [];
+  exportaciones: any[] = [];
+  usosCfdi: any[] = [];
+  regimenesFiscales: any[] = [];
 
   conceptoOptions = new Map<number, Observable<any>>();
   claveUnidadOptions = new Map<number, Observable<any>>();
 
   displayedColumns = [
     'claveProdServ',
-  'descripcion',
-  'cantidad',
-  'valorUnitario',
-  'claveUnidad',
-  'taxObject',
-  'ivaRate',
-  'importe',
-  'acciones'
+    'descripcion',
+    'cantidad',
+    'valorUnitario',
+    'claveUnidad',
+    'taxObject',
+    'ivaRate',
+    'importe',
+    'acciones'
   ];
+
   @ViewChild('conceptosTable') conceptosTable!: MatTable<any>;
+
+  // ✅ Emisor seleccionado
+  emisores: EmisorLite[] = [];
+  selectedEmisor: EmisorLite | null = null;
+  private _emisorSub?: Subscription;
+
   constructor(
     private _route: ActivatedRoute,
     private _router: Router,
@@ -128,39 +103,121 @@ export class ClienteFacturarComponent implements OnInit {
     private _clientesService: Cliente_Clientes,
     private cliente_catalogos: Cliente_Catalogos,
     private alertService: AlertService,
-    //private _cfdisService: CfdisService
+
+    // ✅ snackbar
+    private _snackBar: MatSnackBar,
+
+    // ✅ emisor
+    private _emisorService: EmisorService,
+    private _perfil: Cliente_Perfil,
   ) { }
 
   ngOnInit(): void {
     this.form = this._fb.group({
-      // Datos del comprobante
       serie: ['a'],
       folio: ['1'],
       fecha: [new Date(), Validators.required],
 
-      // Configuración CFDI (se prellena del cliente si existe)
       usoCfdi: ['', Validators.required],
       formaPago: [''],
       metodoPago: [''],
       moneda: ['MXN', Validators.required],
-      exportacion: ['01'], // 01 = No aplica (común)
+      exportacion: ['01'],
 
-      // Conceptos
       conceptos: this._fb.array([this.createConcepto()])
     });
 
+    // Load route params
     this._route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (!id) return;
 
       this.clienteId = id;
+
       this.loadData();
       this.cargarClienteYConfig();
+
+      // ✅ Load emisores + subscribe a cambios
+      this.loadEmisoresYBind();
     });
-
-
   }
 
+  ngOnDestroy(): void {
+    this._emisorSub?.unsubscribe();
+  }
+
+  // ----------------------------
+  // ✅ Emisor handling
+  // ----------------------------
+  private loadEmisoresYBind(): void {
+    this._perfil.GetRazonesSociales().subscribe({
+      next: (list: any[]) => {
+        this.emisores = (list || []).filter(x => x.activo !== false);
+
+        // Selección inicial
+        this.resolveSelectedEmisor(this._emisorService.emisorId);
+
+        // Escuchar cambios
+        this._emisorSub?.unsubscribe();
+        this._emisorSub = this._emisorService.emisorId$.subscribe((id) => {
+          const prevId = this.selectedEmisor?.id ?? null;
+
+          this.resolveSelectedEmisor(id);
+
+          // Si cambió y ya había uno seleccionado, limpia
+          if (prevId && id && id !== prevId) {
+            this.resetFormPorCambioEmisor();
+          }
+        });
+      },
+      error: () => {
+        this.selectedEmisor = null;
+      }
+    });
+  }
+
+  private resolveSelectedEmisor(id: string | null): void {
+    if (!id) {
+      this.selectedEmisor = null;
+      return;
+    }
+    this.selectedEmisor = this.emisores.find(x => x.id === id) ?? null;
+  }
+
+  private resetFormPorCambioEmisor(): void {
+    // Limpia form con defaults
+    this.form.reset({
+      serie: 'a',
+      folio: '1',
+      fecha: new Date(),
+      usoCfdi: '',
+      formaPago: '',
+      metodoPago: '',
+      moneda: 'MXN',
+      exportacion: '01',
+    });
+
+    // Reset conceptos: deja 1
+    while (this.conceptos.length) this.conceptos.removeAt(0);
+    this.conceptos.push(this.createConcepto());
+
+    this.conceptoOptions.clear();
+    this.claveUnidadOptions.clear();
+
+    // Si tu tabla existe, re-render
+    queueMicrotask(() => this.conceptosTable?.renderRows());
+
+    // ✅ Snackbar aviso
+    this._snackBar.open(
+      'Se cambió la razón social (emisor). Se limpió el formulario.',
+      'OK',
+      { duration: 3500 }
+    );
+  }
+
+  // ----------------------------
+  // Form helpers
+  // ----------------------------
   get conceptos(): FormArray {
     return this.form.get('conceptos') as FormArray;
   }
@@ -171,16 +228,14 @@ export class ClienteFacturarComponent implements OnInit {
       descripcion: ['Piedra de tinta', [Validators.required, Validators.maxLength(1000)]],
       cantidad: [1, [Validators.required, Validators.min(0.000001)]],
       valorUnitario: [23, [Validators.required, Validators.min(0)]],
-      //claveUnidad: ['H87', Validators.required],
       claveUnidad: ['H87', Validators.required],
-      taxObject: ['02'],      // 01 = no objeto, 02 = sí objeto
-    ivaRate: [0.16],        // 0.16, 0, null (si no aplica)
+      taxObject: ['02'],
+      ivaRate: [0.16],
     });
   }
 
   addConcepto(): void {
     this.conceptos.push(this.createConcepto());
-    console.log(this.conceptos.length);
     this.conceptosTable.renderRows();
   }
 
@@ -199,22 +254,70 @@ export class ClienteFacturarComponent implements OnInit {
     return this.round2(cantidad * unitario);
   }
 
+  private getNumber(v: any): number {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  private lineBase(i: number): number {
+    const g = this.conceptos.at(i) as FormGroup;
+    const cantidad = this.getNumber(g.get('cantidad')?.value);
+    const unitario = this.getNumber(g.get('valorUnitario')?.value);
+    return this.round2(cantidad * unitario);
+  }
+
+  private lineIva(i: number): number {
+    const g = this.conceptos.at(i) as FormGroup;
+
+    const taxObject = (g.get('taxObject')?.value ?? '02') as string;
+    const rate = g.get('ivaRate')?.value;
+
+    if (taxObject !== '02') return 0;
+    if (rate === null || rate === undefined || rate === '') return 0;
+
+    const ivaRate = this.getNumber(rate); // 0.16 o 0
+    if (ivaRate <= 0) return 0;
+
+    const base = this.lineBase(i);
+    return this.round2(base * ivaRate);
+  }
+
   get subtotal(): number {
     let sum = 0;
-    for (let i = 0; i < this.conceptos.length; i++) sum += this.importeLinea(i);
+    for (let i = 0; i < this.conceptos.length; i++) sum += this.lineBase(i);
     return this.round2(sum);
   }
 
-  // En MVP: total = subtotal (luego agregas IVA/retenciones)
-  get total(): number {
-    return this.subtotal;
+  get totalIva(): number {
+    let sum = 0;
+    for (let i = 0; i < this.conceptos.length; i++) sum += this.lineIva(i);
+    return this.round2(sum);
   }
+
+  get total(): number {
+    // Aquí en el futuro puedes restar retenciones y sumar IEPS
+    return this.round2(this.subtotal + this.totalIva);
+  }
+  /*
+    get subtotal(): number {
+      let sum = 0;
+      for (let i = 0; i < this.conceptos.length; i++) sum += this.importeLinea(i);
+      return this.round2(sum);
+    }
+  
+    get total(): number {
+      return this.subtotal;
+    }
+    */
 
   private round2(n: number): number {
     return Math.round((n + Number.EPSILON) * 100) / 100;
   }
 
-  loadData() {
+  // ----------------------------
+  // Load catalogs + client
+  // ----------------------------
+  loadData(): void {
     forkJoin([
       this.cliente_catalogos.GetRegimenesFiscales(),
       this.cliente_catalogos.GetMetodoPago(),
@@ -223,27 +326,20 @@ export class ClienteFacturarComponent implements OnInit {
       this.cliente_catalogos.GetExportacion(),
       this.cliente_catalogos.GetUsoCfdi(),
     ]).subscribe({
-      next: ([
-        catRegimenFiscalResponse,
-        catMetodoPagoResponse,
-        catFormaPagoResponse,
-        catMonedaResponse,
-        catExportacionResponse,
-        catUsosCfdiResponse
-      ]) => {
-        this.regimenesFiscales = catRegimenFiscalResponse;
-        this.metodosPago = catMetodoPagoResponse;
-        this.formasPago = catFormaPagoResponse;
-        this.monedas = catMonedaResponse;
-        this.exportaciones = catExportacionResponse;
-        this.usosCfdi = catUsosCfdiResponse
+      next: ([reg, met, fp, mon, exp, usos]) => {
+        this.regimenesFiscales = reg;
+        this.metodosPago = met;
+        this.formasPago = fp;
+        this.monedas = mon;
+        this.exportaciones = exp;
+        this.usosCfdi = usos;
       },
-      complete: () => { },
       error: (err) => {
-        this.alertService.showError('Error', err.error);
+        this.alertService.showError('Error', err?.error ?? 'No se pudieron cargar catálogos');
       }
     });
   }
+
   cargarClienteYConfig(): void {
     this.isLoading = true;
 
@@ -253,7 +349,6 @@ export class ClienteFacturarComponent implements OnInit {
         next: (data) => {
           this.cliente = data;
 
-          // Prellenado desde clienteconfiguracion si viene en el DTO
           this.form.patchValue({
             usoCfdi: data.usoCfdi ?? '',
             formaPago: data.formaPago ?? '',
@@ -266,85 +361,96 @@ export class ClienteFacturarComponent implements OnInit {
       });
   }
 
+  // ----------------------------
+  // ✅ Emitir
+  // ----------------------------
   emitir(): void {
-  if (this.form.invalid) {
-    this.form.markAllAsTouched();
-    return;
-  }
+    // ✅ valida emisor
+    const emisorId = this._emisorService.emisorId;
+    if (!emisorId) {
+      this._snackBar.open('Selecciona un emisor antes de emitir.', 'OK', { duration: 3500 });
+      return;
+    }
 
-  const conceptos = this.form.value.conceptos ?? [];
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
-  const items = conceptos.map((c: any) => {
-    const quantity = Number(c.cantidad || 0);
-    const unitPrice = Number(c.valorUnitario || 0);
-    const base = Number((quantity * unitPrice).toFixed(2));
+    const conceptos = this.form.value.conceptos ?? [];
 
-    const taxObject = (c.taxObject ?? '02') as string; // "01" o "02"
-    const ivaRate = c.ivaRate; // 0.16 | 0 | null
+    const items = conceptos.map((c: any) => {
+      const quantity = Number(c.cantidad || 0);
+      const unitPrice = Number(c.valorUnitario || 0);
+      const base = Number((quantity * unitPrice).toFixed(2));
 
-    // Si NO es objeto de impuesto o el usuario eligió "Sin IVA"
-    if (taxObject === '01' || ivaRate === null || ivaRate === undefined) {
+      const taxObject = (c.taxObject ?? '02') as string;
+      const ivaRate = c.ivaRate;
+
+      if (taxObject === '01' || ivaRate === null || ivaRate === undefined) {
+        return {
+          productCode: c.claveProdServ,
+          unitCode: c.claveUnidad,
+          description: c.descripcion,
+          quantity,
+          unitPrice,
+          taxObject: '01',
+          taxes: []
+        };
+      }
+
+      const ivaTotal = Number((base * Number(ivaRate)).toFixed(2));
+
       return {
         productCode: c.claveProdServ,
         unitCode: c.claveUnidad,
         description: c.descripcion,
         quantity,
         unitPrice,
-        taxObject: '01',
-        taxes: [] // mejor mandar vacío o no mandar (depende de tu backend)
+        taxObject: '02',
+        taxes: [{ name: 'IVA', rate: Number(ivaRate), base, total: ivaTotal }]
       };
-    }
+    });
 
-    // Sí objeto de impuesto
-    const ivaTotal = Number((base * Number(ivaRate)).toFixed(2));
-
-    return {
-      productCode: c.claveProdServ,
-      unitCode: c.claveUnidad,
-      description: c.descripcion,
-      quantity,
-      unitPrice,
-      taxObject: '02',
-      taxes: [
-        {
-          name: 'IVA',
-          rate: Number(ivaRate), // 0.16 o 0
-          base,
-          total: ivaTotal
-        }
-      ]
+    const payload = {
+      razonSocialId: emisorId,
+      clienteId: this.clienteId,
+      serie: this.form.value.serie || null,
+      folio: this.form.value.folio || null,
+      fecha: this.form.value.fecha,
+      cfdiUse: this.form.value.usoCfdi,
+      expeditionPlace: this.form.value.expeditionPlace || '',
+      cfdiType: 'I',
+      currency: this.form.value.moneda,
+      exportation: this.form.value.exportacion,
+      paymentForm: this.form.value.formaPago || null,
+      paymentMethod: this.form.value.metodoPago || null,
+      items
     };
-  });
 
-  const payload = {
-    clienteId: this.clienteId,
-    serie: this.form.value.serie || null,
-    folio: this.form.value.folio || null,
-    fecha: this.form.value.fecha,
-    cfdiUse: this.form.value.usoCfdi,
+    this.isSubmitting = true;
 
-    expeditionPlace: this.form.value.expeditionPlace || '', // si lo tienes
-    cfdiType: 'I', // o tu valor real
-    currency: this.form.value.moneda,
-    exportation: this.form.value.exportacion,
-    paymentForm: this.form.value.formaPago || null,
-    paymentMethod: this.form.value.metodoPago || null,
-
-    items
-  };
-
-  console.log(payload);
-
-  this._clientesService.emitirMulti(payload).subscribe({
-    next: (res) => console.log(res),
-    error: (err) => console.log(err)
-  });
-}
+    this._clientesService.emitir(payload).pipe(
+      finalize(() => this.isSubmitting = false)
+    ).subscribe({
+      next: (res) => {
+        this._snackBar.open('Factura emitida correctamente', 'OK', { duration: 3500 });
+        console.log(res);
+      },
+      error: (err) => {
+        this._snackBar.open(err?.error?.message ?? 'Error al emitir', 'OK', { duration: 4500 });
+        console.log(err);
+      }
+    });
+  }
 
   cancelar(): void {
     this._router.navigate(['/cliente', 'clientes']);
   }
 
+  // ----------------------------
+  // Autocomplete helpers (los tuyos tal cual)
+  // ----------------------------
   private normalizeQuery_Unidad(v: any): string {
     if (!v) return '';
     if (typeof v === 'string') return v.trim();
@@ -354,7 +460,6 @@ export class ClienteFacturarComponent implements OnInit {
   private normalizeQuery(v: any): string {
     if (!v) return '';
     if (typeof v === 'string') return v.trim();
-    // si llega objeto seleccionado
     return (v.cClaveProdServ ?? '').toString().trim();
   }
 
@@ -369,12 +474,8 @@ export class ClienteFacturarComponent implements OnInit {
       map(v => this.normalizeQuery_Unidad(v)),
       debounceTime(250),
       distinctUntilChanged(),
-      filter(q => q.length >= 2), // 👈 aquí es 2
-      switchMap(q =>
-        this.cliente_catalogos.GetClaveUnidad(q, 20).pipe(
-          catchError(() => of([]))
-        )
-      )
+      filter(q => q.length >= 2),
+      switchMap(q => this.cliente_catalogos.GetClaveUnidad(q, 20).pipe(catchError(() => of([]))))
     );
 
     this.claveUnidadOptions.set(i, obs);
@@ -386,27 +487,21 @@ export class ClienteFacturarComponent implements OnInit {
 
   onSelectClaveUnidad(i: number, item: any): void {
     const fg = this.conceptos.at(i) as FormGroup;
-
-    fg.patchValue({
-      claveUnidad: item.cClaveUnidad
-    }, { emitEvent: false });
+    fg.patchValue({ claveUnidad: item.cClaveUnidad }, { emitEvent: false });
   }
 
-  // Limpia si no selecciona
   onClaveUnidadBlur(i: number): void {
     const fg = this.conceptos.at(i) as FormGroup;
     const ctrl = fg.get('claveUnidad');
     if (!ctrl) return;
 
     const value = ctrl.value;
-
     if (typeof value === 'string') {
       fg.patchValue({ claveUnidad: '' }, { emitEvent: false });
       ctrl.markAsTouched();
     }
   }
 
-  //--------------------
   getConceptoOptions(i: number): Observable<any> {
     if (this.conceptoOptions.has(i)) return this.conceptoOptions.get(i)!;
 
@@ -419,11 +514,7 @@ export class ClienteFacturarComponent implements OnInit {
       debounceTime(250),
       distinctUntilChanged(),
       filter(q => q.length >= 3),
-      switchMap(q =>
-        this.cliente_catalogos.GetConceptos(q, 20).pipe(
-          catchError(() => of([]))
-        )
-      )
+      switchMap(q => this.cliente_catalogos.GetConceptos(q, 20).pipe(catchError(() => of([]))))
     );
 
     this.conceptoOptions.set(i, obs);
@@ -435,24 +526,9 @@ export class ClienteFacturarComponent implements OnInit {
 
   onSelectConcepto(i: number, item: any): void {
     const fg = this.conceptos.at(i) as FormGroup;
-
     fg.patchValue({
       claveProdServ: item.cClaveProdServ,
       descripcion: item.descripcion
     }, { emitEvent: false });
-
   }
-
-
-  /*
-  removeConcepto(index: number): void {
-    if (this.conceptos.length === 1) return;
-  
-    this.conceptos.removeAt(index);
-  
-    // limpia caché y reconstruye (simple y efectivo)
-    this.conceptoOptions.clear();
-    // si usas mat-table: this.conceptosTable.renderRows();
-  }
-    */
 }
