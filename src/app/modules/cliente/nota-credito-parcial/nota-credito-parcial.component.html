@@ -1,0 +1,129 @@
+<div class="w-full pt-6 px-6">
+
+  <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center gap-3">
+      <button mat-icon-button (click)="cancelar()" matTooltip="Volver">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+
+      <div>
+        <div class="text-xl font-semibold leading-tight">Nota de crédito parcial</div>
+        <div class="text-sm text-secondary" *ngIf="cfdi">
+          CFDI origen: <span class="font-medium">{{ cfdi.serie }}{{ cfdi.folio }}</span>
+          · UUID: <span class="font-medium">{{ cfdi.uuid }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3" *ngIf="cfdi">
+      <div class="text-right">
+        <div class="text-sm text-secondary">Total NC estimado</div>
+        <div class="text-2xl font-semibold">{{ totalNcEstimado | number:'1.2-2' }} {{ cfdi.moneda }}</div>
+      </div>
+
+      <button mat-flat-button color="primary" [disabled]="isSaving || isLoading || !cfdi" (click)="generarNcParcial()">
+        <mat-icon>receipt_long</mat-icon>
+        Generar NC parcial
+      </button>
+    </div>
+  </div>
+
+  <p class="text-sm text-gray-600" *ngIf="tipoDevolucion === 'TOTAL'">
+    Devolución total seleccionada: se acreditarán todos los conceptos.
+  </p>
+
+  <mat-divider class="mb-4"></mat-divider>
+
+  <div class="flex items-center justify-center py-10" *ngIf="isLoading">
+    <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+  </div>
+
+  <ng-container *ngIf="!isLoading && cfdi">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Motivo de la nota de crédito</mat-label>
+        <input matInput [formControl]="motivoCtrl" placeholder="01, 02, 03, 04" />
+      </mat-form-field>
+
+      <div class="flex items-center justify-end text-sm text-secondary">
+        Selecciona cantidades a acreditar por concepto
+      </div>
+    </div>
+
+    <div class="mat-elevation-z1 rounded-2xl overflow-hidden">
+      <table mat-table [dataSource]="cfdi.conceptos" class="w-full min-w-max">
+
+        <!-- Cantidad -->
+        <ng-container matColumnDef="cantidad">
+          <th mat-header-cell *matHeaderCellDef class="text-right">Cantidad</th>
+          <td mat-cell *matCellDef="let c" class="text-right">
+            {{ c.cantidad | number:'1.0-6' }}
+          </td>
+        </ng-container>
+
+        <!-- Descripción -->
+        <ng-container matColumnDef="descripcion">
+          <th mat-header-cell *matHeaderCellDef>Descripción</th>
+          <td mat-cell *matCellDef="let c" class="py-3">
+            <div class="font-medium">{{ c.descripcion }}</div>
+            <div class="text-xs text-secondary">
+              {{ c.productCode ?? c.claveProdServ ?? '' }} · {{ c.unitCode ?? '' }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Valor unitario -->
+        <ng-container matColumnDef="valorUnitario">
+          <th mat-header-cell *matHeaderCellDef class="text-right">V. unitario</th>
+          <td mat-cell *matCellDef="let c" class="text-right">
+            {{ c.valorUnitario | number:'1.2-2' }}
+          </td>
+        </ng-container>
+
+        <!-- Descuento -->
+        <ng-container matColumnDef="descuento">
+          <th mat-header-cell *matHeaderCellDef class="text-right">Descuento</th>
+          <td mat-cell *matCellDef="let c" class="text-right">
+            {{ c.descuento | number:'1.2-2' }}
+          </td>
+        </ng-container>
+
+        <!-- Importe -->
+        <ng-container matColumnDef="importe">
+          <th mat-header-cell *matHeaderCellDef class="text-right">Importe</th>
+          <td mat-cell *matCellDef="let c" class="text-right font-medium">
+            {{ c.importe | number:'1.2-2' }}
+          </td>
+        </ng-container>
+
+        <!-- Cantidad NC -->
+        <ng-container matColumnDef="cantidadNc">
+          <th mat-header-cell *matHeaderCellDef class="text-right">Cant. NC</th>
+          <td mat-cell *matCellDef="let c; let i = index" class="text-right">
+            <mat-form-field appearance="outline" class="w-28">
+              <input matInput type="number" [min]="0" [max]="c.cantidad"
+                [formControl]="conceptosFA.at(i).get('cantidadNc')" />
+            </mat-form-field>
+
+            <div class="text-xs text-secondary -mt-2">
+              máx: {{ c.cantidad | number:'1.0-6' }}
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+
+    <div class="mt-4 flex justify-end gap-2">
+      <button mat-stroked-button (click)="cancelar()" [disabled]="isSaving">Cancelar</button>
+      <button mat-flat-button color="primary" (click)="generarNcParcial()" [disabled]="isSaving">
+        <mat-icon>receipt_long</mat-icon>
+        Generar NC parcial
+      </button>
+    </div>
+
+  </ng-container>
+</div>

@@ -1,76 +1,300 @@
-<div class="flex min-w-0 flex-auto flex-col">
-    <div class="-mt-px flex-auto border-t pt-4 sm:pt-6">
-        <div class="mx-auto w-full max-w-screen-xl">
-            <div>
+<div class="page-wrap">
 
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Nuevos -->
-                    <div
-                        class="rounded-2xl bg-white dark:bg-card p-6 shadow hover:shadow-md hover:scale-[1.01] transition-all duration-200">
-                        <div class="text-sm font-medium text-red-600 dark:text-red-500 mb-1">Nuevos</div>
-                        <div class="flex items-center gap-2 text-5xl font-bold text-red-500 tracking-tight">
-                            {{nuevos}}
-                            <mat-icon fontIcon="mark_email_unread" class="text-4xl text-red-400"></mat-icon>
-                        </div>
-                        <div class="mt-2 text-xs text-muted-foreground">Tickets recién creados sin asignación</div>
-                    </div>
+  <!-- Header -->
+  <div class="page-header">
+    <div class="flex items-start gap-3">
+      <div class="header-icon">
+        <mat-icon>dashboard</mat-icon>
+      </div>
 
-                    <!-- Asignados -->
-                    <div
-                        class="rounded-2xl bg-white dark:bg-card p-6 shadow hover:shadow-md hover:scale-[1.01] transition-all duration-200">
-                        <div class="text-sm font-medium text-blue-600 dark:text-blue-500 mb-1">Asignados</div>
-                        <div class="flex items-center gap-2 text-5xl font-bold text-blue-500 tracking-tight">
-                            {{asignados}}
-                            <mat-icon fontIcon="assignment_ind" class="text-4xl text-blue-400"></mat-icon>
-                        </div>
-                        <div class="mt-2 text-xs text-muted-foreground">Tickets en seguimiento activo</div>
-                    </div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <h1 class="page-title">Dashboard de Facturación</h1>
 
-                    <!-- En espera -->
-                    <div
-                        class="rounded-2xl bg-white dark:bg-card p-6 shadow hover:shadow-md hover:scale-[1.01] transition-all duration-200">
-                        <div class="text-sm font-medium text-amber-600 dark:text-amber-500 mb-1">En espera</div>
-                        <div class="flex items-center gap-2 text-5xl font-bold text-amber-500 tracking-tight">
-                            {{enEspera}}
-                            <mat-icon fontIcon="schedule" class="text-4xl text-amber-400"></mat-icon>
-                        </div>
-                        <div class="mt-2 text-xs text-muted-foreground">Tickets detenidos o pendientes</div>
-                    </div>
-
-                    <!-- Concluidos -->
-                    <div
-                        class="rounded-2xl bg-white dark:bg-card p-6 shadow hover:shadow-md hover:scale-[1.01] transition-all duration-200">
-                        <div class="text-sm font-medium text-green-600 dark:text-green-500 mb-1">Por confirmar</div>
-                        <div class="flex items-center gap-2 text-5xl font-bold text-green-500 tracking-tight">
-                            {{porConfirmar}}
-                            <mat-icon fontIcon="check_circle" class="text-4xl text-green-400"></mat-icon>
-                        </div>
-                        <div class="mt-2 text-xs text-muted-foreground">En espera de confirmación por el solicitante</div>
-                    </div>
-                </div>
-
-            </div>
-
-
-            <div class="mt-6 w-full" *ngIf="muestraGraficaMensual == true">
-                <app-barra-tickets-area-meses
-                    *ngIf="graficaMensual?.meses?.length > 0 && graficaMensual?.detalle?.length > 0"
-    [etiquetas]="graficaMensual.meses"
-    [series]="graficaMensual.detalle"
-                ></app-barra-tickets-area-meses>
-            </div>
-            <div class="mt-6 grid w-full grid-cols-1 gap-8 sm:grid-cols-2 md:mt-8 lg:grid-cols-4">
-
-                <app-dona-tickets-area [titulo]="'Quirofano'"
-                    [etiquetas]="['Nuevo', 'Asignado', 'En esera', 'Por confirmar', 'Resuelto']"
-                    [porcentajes]="[10, 15, 20, 20, 35]" [total]="150"></app-dona-tickets-area>
-
-
-
-            </div>
-
+          <mat-chip class="period-chip" selected>
+            <mat-icon class="mr-1">date_range</mat-icon>
+            {{ periodoLabel }}
+          </mat-chip>
         </div>
 
-
+        <div class="page-subtitle">
+          Última actualización: {{ lastSync | date:'dd/MM/yyyy HH:mm' }}
+        </div>
+      </div>
     </div>
+
+    <div class="header-actions">
+      <button mat-stroked-button type="button" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+
+      <button mat-flat-button color="primary" type="button">
+        <mat-icon>add</mat-icon>
+        Nuevo CFDI
+      </button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <mat-card class="kpi-card" *ngFor="let k of kpis">
+      <div class="kpi-top">
+        <div class="kpi-icon">
+          <mat-icon>{{ k.icon }}</mat-icon>
+        </div>
+
+        <button mat-icon-button [matMenuTriggerFor]="kpiMenu" class="kpi-menu" type="button">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #kpiMenu="matMenu">
+          <button mat-menu-item type="button">
+            <mat-icon>open_in_new</mat-icon>
+            <span>Ver detalle</span>
+          </button>
+          <button mat-menu-item type="button">
+            <mat-icon>download</mat-icon>
+            <span>Exportar</span>
+          </button>
+        </mat-menu>
+      </div>
+
+      <div class="kpi-title">{{ k.title }}</div>
+      <div class="kpi-value">{{ k.value }}</div>
+      <div class="kpi-hint">{{ k.hint }}</div>
+
+      <div class="kpi-trend" *ngIf="k.trend">
+        <span class="trend-badge" [class.up]="k.trend.direction === 'up'" [class.down]="k.trend.direction === 'down'">
+          <mat-icon class="trend-ic">
+            {{ k.trend.direction === 'up' ? 'trending_up' : 'trending_down' }}
+          </mat-icon>
+          {{ k.trend.value }}
+        </span>
+        <span class="trend-note">{{ k.trend.note }}</span>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Content grid -->
+  <div class="content-grid">
+
+    <!-- Facturación 12 meses -->
+    <mat-card class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Facturación últimos 12 meses</div>
+          <div class="panel-subtitle">Montos timbrados (dummy)</div>
+        </div>
+
+        <button mat-stroked-button type="button">
+          <mat-icon>insights</mat-icon>
+          Ver reporte
+        </button>
+      </div>
+
+      <div class="bars">
+        <div class="bar-col" *ngFor="let p of facturacion12m" [matTooltip]="(p.amount | currency:'MXN':'symbol':'1.0-0')">
+          <div class="bar" [style.height.px]="barHeightPx(p.amount)"></div>
+          <div class="bar-label">{{ p.label }}</div>
+        </div>
+      </div>
+
+      <div class="panel-foot">
+        <div class="foot-item">
+          <div class="foot-k">Promedio mensual</div>
+          <div class="foot-v">
+           100
+          </div>
+        </div>
+
+        <div class="foot-item">
+          <div class="foot-k">Mejor mes</div>
+          <div class="foot-v">
+            {{
+              (maxMonthlyAmount) | currency:'MXN':'symbol':'1.0-0'
+            }}
+          </div>
+        </div>
+
+        <div class="foot-item">
+          <div class="foot-k">Tendencia</div>
+          <div class="foot-v">Estable</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- Distribución por estatus -->
+    <mat-card class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Estatus de CFDIs</div>
+          <div class="panel-subtitle">Distribución del periodo (dummy)</div>
+        </div>
+
+        <button mat-icon-button type="button" matTooltip="Configurar">
+          <mat-icon>tune</mat-icon>
+        </button>
+      </div>
+
+      <div class="status-wrap">
+        <div class="donut" [style.background]="donutStyle">
+          <div class="donut-hole">
+            <div class="donut-big">{{ statusSlices[0].value }}%</div>
+            <div class="donut-small">Timbrado</div>
+          </div>
+        </div>
+
+        <div class="status-legend">
+          <div class="legend-row" *ngFor="let s of statusSlices">
+            <span class="legend-dot" [class.ok]="s.status==='TIMBRADO'"
+                                  [class.cancel]="s.status==='CANCELADO'"
+                                  [class.draft]="s.status==='BORRADOR'"
+                                  [class.error]="s.status==='ERROR'"></span>
+            <div class="legend-name">{{ s.label }}</div>
+            <div class="legend-val">{{ s.value }}%</div>
+          </div>
+
+          <div class="mt-3">
+            <div class="text-xs text-gray-500 mb-1">Salud de timbrado</div>
+            <mat-progress-bar mode="determinate" [value]="statusSlices[0].value"></mat-progress-bar>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- CFDIs recientes -->
+    <mat-card class="panel span-2">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">CFDIs recientes</div>
+          <div class="panel-subtitle">Últimos movimientos (dummy)</div>
+        </div>
+
+        <div class="flex gap-2">
+          <button mat-stroked-button type="button">
+            <mat-icon>download</mat-icon>
+            Exportar
+          </button>
+          <button mat-flat-button color="primary" type="button">
+            <mat-icon>search</mat-icon>
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table mat-table [dataSource]="recentCfdis" class="w-full">
+
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let r">
+              <div class="cell-main">{{ r.fecha | date:'dd/MM/yyyy' }}</div>
+              <div class="cell-sub">{{ r.fecha | date:'HH:mm' }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="folio">
+            <th mat-header-cell *matHeaderCellDef>Serie / Folio</th>
+            <td mat-cell *matCellDef="let r">
+              <div class="cell-main">{{ r.serie }}-{{ r.folio }}</div>
+              <div class="cell-sub truncate" [matTooltip]="r.uuid">{{ r.uuid }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="receptor">
+            <th mat-header-cell *matHeaderCellDef>Receptor</th>
+            <td mat-cell *matCellDef="let r">
+              <div class="cell-main truncate" [matTooltip]="r.receptor">{{ r.receptor }}</div>
+              <div class="cell-sub">{{ r.rfc }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef class="text-right">Total</th>
+            <td mat-cell *matCellDef="let r" class="text-right">
+              <div class="cell-main">{{ r.total | currency:r.moneda:'symbol':'1.2-2' }}</div>
+              <div class="cell-sub">{{ r.moneda }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="estatus">
+            <th mat-header-cell *matHeaderCellDef>Estatus</th>
+            <td mat-cell *matCellDef="let r">
+              <span [class]="statusChipClass(r.estatus)">{{ r.estatus }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef class="text-right">Acciones</th>
+            <td mat-cell *matCellDef="let r" class="text-right">
+              <button mat-icon-button type="button" matTooltip="Ver" (click)="openCfdi(r)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button type="button" matTooltip="Descargar XML" (click)="downloadXml(r)">
+                <mat-icon>description</mat-icon>
+              </button>
+              <button mat-icon-button type="button" matTooltip="Descargar PDF" (click)="downloadPdf(r)">
+                <mat-icon>picture_as_pdf</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="recentDisplayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: recentDisplayedColumns;" class="row-hover"></tr>
+        </table>
+      </div>
+    </mat-card>
+
+    <!-- Top clientes -->
+    <mat-card class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Top clientes</div>
+          <div class="panel-subtitle">Por total facturado (dummy)</div>
+        </div>
+        <button mat-stroked-button type="button">
+          <mat-icon>group</mat-icon>
+          Ver clientes
+        </button>
+      </div>
+
+      <div class="list">
+        <div class="list-row" *ngFor="let c of topClients">
+          <div class="min-w-0">
+            <div class="list-title truncate" [matTooltip]="c.nombre">{{ c.nombre }}</div>
+            <div class="list-sub">{{ c.rfc }} • {{ c.facturas | number:'1.0-0' }} facturas</div>
+          </div>
+          <div class="list-right">
+            <div class="list-amount">{{ c.total | currency:'MXN':'symbol':'1.0-0' }}</div>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- Alertas -->
+    <mat-card class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Alertas</div>
+          <div class="panel-subtitle">Acciones recomendadas (dummy)</div>
+        </div>
+        <button mat-icon-button type="button" matTooltip="Ver todo">
+          <mat-icon>open_in_new</mat-icon>
+        </button>
+      </div>
+
+      <div class="alerts">
+        <div class="alert-row" *ngFor="let a of alerts">
+          <div class="alert-ic">
+            <mat-icon>{{ a.icon }}</mat-icon>
+          </div>
+          <div class="min-w-0">
+            <div class="alert-title">{{ a.title }}</div>
+            <div class="alert-desc truncate" [matTooltip]="a.desc">{{ a.desc }}</div>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+
+  </div>
 </div>

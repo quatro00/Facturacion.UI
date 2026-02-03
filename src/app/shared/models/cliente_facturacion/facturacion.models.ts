@@ -6,3 +6,11 @@ export interface CfdiCreadoDto {
   folio?: string;
   total: number;
 }
+
+export interface CrearNcParcialRequest {
+  motive: string;
+  conceptos: Array<{
+    cfdiConceptoId: string;
+    cantidad: number;
+  }>;
+}

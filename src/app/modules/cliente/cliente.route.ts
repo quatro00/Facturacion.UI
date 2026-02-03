@@ -9,6 +9,7 @@ import { ClienteComponent } from './cliente/cliente.component';
 import { ClienteFacturarComponent } from './cliente-facturar/cliente-facturar.component';
 import { CfdisListComponent } from './cfdis-list/cfdis-list.component';
 import { CfdiDetalleComponent } from './cfdi-detalle/cfdi-detalle.component';
+import { NotaCreditoParcialComponent } from './nota-credito-parcial/nota-credito-parcial.component';
 
 export default [
     {
@@ -23,6 +24,7 @@ export default [
             { path: 'clientes/cliente/:id/facturar', component: ClienteFacturarComponent },
             { path: 'facturas', component: CfdisListComponent },
             { path: 'cfdi/:id', component: CfdiDetalleComponent },
+            { path: 'cfdis/:id/nota-credito-parcial', component: NotaCreditoParcialComponent },
         ]
     },
 ] as Routes;
