@@ -1,0 +1,33 @@
+.section-title {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.rs-row {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 12px;
+  align-items: center;
+
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 16px;
+  background: rgba(0,0,0,0.015);
+
+  .rs-default {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 900px) {
+  .rs-row {
+    grid-template-columns: 1fr;
+    .rs-default {
+      justify-content: flex-start;
+      padding-left: 34px; // alinea con checkbox
+    }
+  }
+}

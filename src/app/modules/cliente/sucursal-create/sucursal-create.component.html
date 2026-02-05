@@ -1,0 +1,217 @@
+<div class="flex w-full flex-auto flex-col">
+
+  <!-- Header -->
+  <div class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+    @if (isLoading || isSaving) {
+    <div class="absolute inset-x-0 bottom-0">
+      <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+    </div>
+    }
+
+    <div>
+      <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+        Nueva sucursal
+      </h2>
+      <div class="text-secondary font-medium tracking-tight">
+        Registro de sucursal y series por tipo CFDI
+      </div>
+    </div>
+
+    <div class="mt-6 flex shrink-0 items-center gap-2 sm:mt-0">
+      <button mat-stroked-button (click)="cancelar()">
+        <mat-icon class="mr-2">arrow_back</mat-icon>
+        Cancelar
+      </button>
+
+      <button mat-raised-button color="primary" [disabled]="isSaving" (click)="guardar()">
+        <mat-icon class="mr-2">save</mat-icon>
+        Guardar
+      </button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="flex-auto p-6 md:p-8">
+    <form [formGroup]="form" class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+      <!-- Datos -->
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="text-lg font-semibold">Datos</div>
+
+        <div class="mt-4 grid grid-cols-1 gap-4">
+          <mat-form-field appearance="outline">
+            <mat-label>Código</mat-label>
+            <input matInput formControlName="codigo" placeholder="Ej. MTY01" />
+            @if (form.get('codigo')?.touched && form.get('codigo')?.invalid) {
+            <mat-error>Código inválido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" placeholder="Ej. Sucursal Monterrey Centro" />
+            @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+            <mat-error>Nombre requerido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-slide-toggle formControlName="activo">Activa</mat-slide-toggle>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <mat-form-field appearance="outline">
+              <mat-label>Teléfono</mat-label>
+              <input matInput formControlName="telefono" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="email" />
+              @if (form.get('email')?.touched && form.get('email')?.invalid) {
+              <mat-error>Email inválido</mat-error>
+              }
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dirección -->
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="text-lg font-semibold">Dirección</div>
+
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Código Postal</mat-label>
+            <input matInput formControlName="codigoPostal" placeholder="64000" />
+            @if (form.get('codigoPostal')?.touched && form.get('codigoPostal')?.invalid) {
+            <mat-error>CP inválido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Colonia</mat-label>
+            <mat-select formControlName="colonia" [disabled]="colonias.length === 0">
+              @for (c of colonias; track c) {
+              <mat-option [value]="c">{{ c }}</mat-option>
+              }
+            </mat-select>
+            @if (form.get('colonia')?.touched && form.get('colonia')?.invalid) {
+            <mat-error>Colonia requerida</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Estado</mat-label>
+            <input matInput formControlName="estado" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Municipio</mat-label>
+            <input matInput formControlName="municipio" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="sm:col-span-2">
+            <mat-label>Calle</mat-label>
+            <input matInput formControlName="calle" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>No. Exterior</mat-label>
+            <input matInput formControlName="noExterior" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>No. Interior</mat-label>
+            <input matInput formControlName="noInterior" />
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Razones Sociales -->
+      <div class="rounded-2xl border bg-white p-6 shadow-sm lg:col-span-2">
+        <div class="flex items-center justify-between">
+          <div class="text-lg font-semibold">Razones sociales</div>
+          <button mat-stroked-button type="button" (click)="seleccionarTodasRazones()">
+            Seleccionar todas
+          </button>
+        </div>
+
+        @if (!razonesSociales?.length) {
+        <div class="mt-4 text-secondary">— No hay razones sociales registradas</div>
+        } @else {
+        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          @for (rs of razonesSociales; track trackById($index, rs)) {
+          <div class="rounded-xl border p-4">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="font-semibold">{{ rs.razonSocial }}</div>
+                <div class="text-sm text-secondary">{{ rs.rfc }}</div>
+              </div>
+
+              <mat-checkbox [checked]="isRsSelected(rs.id)" (change)="toggleRs(rs.id, $event.checked)">
+                Asociar
+              </mat-checkbox>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between">
+              <span class="text-sm text-secondary">Default</span>
+              <mat-checkbox [disabled]="!isRsSelected(rs.id)" [checked]="defaultRsMap[rs.id]"
+                (change)="setDefaultForRs(rs.id, $event.checked)">
+              </mat-checkbox>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <!-- ✅ Series por sucursal -->
+      <div class="rounded-2xl border bg-white p-6 shadow-sm lg:col-span-2" formArrayName="series">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-lg font-semibold">Series por sucursal</div>
+            <div class="text-secondary text-sm">
+              Define la serie por concepto. Las 3 de Tipo <b>I</b> (Mercancías/Servicios/Anticipo) son obligatorias.
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          @for (sg of seriesFA.controls; track $index) {
+          <div class="rounded-xl border p-4" [formGroupName]="$index">
+
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="font-semibold">{{ seriesLabel($index) }}</div>
+                <div class="text-sm text-secondary">{{ tiposSeries[$index]?.hint }}</div>
+              </div>
+
+              <span class="rounded-full border px-2 py-0.5 text-xs text-secondary">
+                {{ tiposSeries[$index]?.tipo }}
+              </span>
+            </div>
+
+            <div class="mt-3 grid grid-cols-1 gap-3">
+              <mat-form-field appearance="outline">
+                <mat-label>Serie</mat-label>
+                <input matInput formControlName="serie" placeholder="Ej. MTYMER, MTYSRV, MTYANT..." />
+                @if (sg.get('serie')?.touched && sg.get('serie')?.invalid) {
+                <mat-error>Serie inválida (solo letras/números/_/-)</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Folio inicial (opcional)</mat-label>
+                <input matInput type="number" formControlName="folioInicial" placeholder="1" />
+              </mat-form-field>
+
+              <mat-slide-toggle formControlName="activo">Activa</mat-slide-toggle>
+            </div>
+
+          </div>
+          }
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>

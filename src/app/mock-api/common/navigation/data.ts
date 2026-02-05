@@ -180,34 +180,41 @@ export const horizontalNavigation_responsable: FuseNavigationItem[] = [
 
 //menus para el supervisor
 export const defaultNavigation_cliente: FuseNavigationItem[] = [
-   {
-        id   : 'home',
-        title: 'Home',
-        type : 'basic',
-        icon : 'heroicons_outline:home',
-        link : '/cliente/home'
-    },
     {
-        id   : 'ErazonesSociales',
-        title: 'Razones sociales',
-        type : 'basic',
-        icon : 'heroicons_outline:ticket',
-        link : '/cliente/perfil'
-    },
-    {
-        id   : 'clientes',
-        title: 'Clientes',
-        type : 'basic',
-        icon : 'heroicons_outline:ticket',
-        link : '/cliente/clientes'
-    },
-    {
-        id   : 'Facturas',
-        title: 'Facturas',
-        type : 'basic',
-        icon : 'heroicons_outline:ticket',
-        link : '/cliente/facturas'
-    },
+    id   : 'home',
+    title: 'Home',
+    type : 'basic',
+    icon : 'heroicons_outline:home',
+    link : '/cliente/home'
+  },
+  {
+    id   : 'razonesSociales',
+    title: 'Razones sociales',
+    type : 'basic',
+    icon : 'heroicons_outline:building-office-2',
+    link : '/cliente/perfil'
+  },
+  {
+    id   : 'clientes',
+    title: 'Clientes',
+    type : 'basic',
+    icon : 'heroicons_outline:users',
+    link : '/cliente/clientes'
+  },
+  {
+    id   : 'facturas',
+    title: 'Facturas',
+    type : 'basic',
+    icon : 'heroicons_outline:document-text',
+    link : '/cliente/facturas'
+  },
+  {
+    id   : 'sucursales',
+    title: 'Sucursales',
+    type : 'basic',
+    icon : 'heroicons_outline:building-storefront',
+    link : '/cliente/sucursales'
+  }
 ];
 export const compactNavigation_cliente: FuseNavigationItem[] = [
     {

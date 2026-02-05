@@ -27,6 +27,7 @@ import { AlertService } from 'app/services/alert.service';
 // ✅ Emisor
 import { EmisorService, EmisorLite } from 'app/core/emisor/emisor.service';
 import { Cliente_Perfil } from 'app/services/cliente/cliente_perfil.service';
+import { Cliente_Sucursal } from 'app/services/cliente/cliente_sucursal.service';
 
 @Component({
   selector: 'app-cliente-facturar',
@@ -60,6 +61,14 @@ import { Cliente_Perfil } from 'app/services/cliente/cliente_perfil.service';
   ],
 })
 export class ClienteFacturarComponent implements OnInit, OnDestroy {
+
+  isLoadingSerieFolio = false;
+  serieFolioWarning: string | null = null;
+
+  private _serieFolioSub?: Subscription;
+
+  sucursales: any[] = [];
+
   clienteId!: string;
   cliente: any;
 
@@ -102,6 +111,7 @@ export class ClienteFacturarComponent implements OnInit, OnDestroy {
     private _fb: FormBuilder,
     private _clientesService: Cliente_Clientes,
     private cliente_catalogos: Cliente_Catalogos,
+    private _sucursalService: Cliente_Sucursal,
     private alertService: AlertService,
 
     // ✅ snackbar
@@ -114,8 +124,10 @@ export class ClienteFacturarComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.form = this._fb.group({
-      serie: ['a'],
-      folio: ['1'],
+      tipoIngreso: ['I_MERCANCIAS', Validators.required],
+      sucursalId: ['', Validators.required],
+      serie: [''],
+      folio: [''],
       fecha: [new Date(), Validators.required],
 
       usoCfdi: ['', Validators.required],
@@ -126,6 +138,8 @@ export class ClienteFacturarComponent implements OnInit, OnDestroy {
 
       conceptos: this._fb.array([this.createConcepto()])
     });
+
+    this.bindSerieFolioAuto();
 
     // Load route params
     this._route.paramMap.subscribe(params => {
@@ -142,8 +156,93 @@ export class ClienteFacturarComponent implements OnInit, OnDestroy {
     });
   }
 
+  private bindSerieFolioAuto(): void {
+    this._serieFolioSub?.unsubscribe();
+
+    const tipoCtrl = this.form.get('tipoIngreso')!;
+    const sucCtrl = this.form.get('sucursalId')!;
+
+    this._serieFolioSub = tipoCtrl.valueChanges
+      .pipe(startWith(tipoCtrl.value))
+      .subscribe(() => this.tryLoadSerieFolio());
+
+    // también en cambios de sucursal
+    sucCtrl.valueChanges
+      .pipe(startWith(sucCtrl.value))
+      .subscribe(() => this.tryLoadSerieFolio());
+  }
+
+  private tryLoadSerieFolio(): void {
+    this.serieFolioWarning = null;
+
+    const emisorId = this._emisorService.emisorId;
+    const sucursalId = this.form.get('sucursalId')?.value;
+    const concepto = this.form.get('tipoIngreso')?.value;
+
+    // Limpia si falta algo
+    if (!emisorId || !sucursalId || !concepto) {
+      this.form.patchValue({ serie: '', folio: '' }, { emitEvent: false });
+      return;
+    }
+
+    this.isLoadingSerieFolio = true;
+
+    this._sucursalService.GetSerieFolioSiguiente(sucursalId, concepto)
+      .pipe(finalize(() => (this.isLoadingSerieFolio = false)))
+      .subscribe({
+        next: (res) => {
+          // res: { serie, folio, expeditionPlace? }
+          this.form.patchValue(
+            { serie: res.serie ?? '', folio: (res.folio ?? '').toString() },
+            { emitEvent: false }
+          );
+
+          if (!res.serie) {
+            this.serieFolioWarning =
+              'No hay serie configurada para este tipo de factura en la sucursal. Configúrala en “Series por sucursal”.';
+          }
+        },
+        error: (err) => {
+          this.form.patchValue({ serie: '', folio: '' }, { emitEvent: false });
+          this.serieFolioWarning = err?.error?.message
+            ?? 'No se pudo determinar la serie/folio. Verifica la configuración de series.';
+        }
+      });
+  }
+
   ngOnDestroy(): void {
     this._emisorSub?.unsubscribe();
+    this._serieFolioSub?.unsubscribe();
+  }
+
+  private loadSucursalesPorEmisor(razonSocialId: string | null): void {
+    // reset
+    this.sucursales = [];
+    this.form.patchValue({ sucursalId: '' }, { emitEvent: false });
+
+    if (!razonSocialId) return;
+
+    this._sucursalService.GetSucursales({
+      RazonSocialId: razonSocialId,
+      Status: 'ACTIVE',
+      Page: 1,
+      PageSize: 200,
+      Sort: 'codigo',
+      Dir: 'asc'
+    }).subscribe({
+      next: (res) => {
+        this.sucursales = res?.items ?? [];
+
+        // ✅ opcional: si solo hay 1, autoseleccionar
+        if (this.sucursales.length === 1) {
+          this.form.patchValue({ sucursalId: this.sucursales[0].id }, { emitEvent: false });
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this._snackBar.open('No se pudieron cargar las sucursales del emisor.', 'OK', { duration: 3500 });
+      }
+    });
   }
 
   // ----------------------------
@@ -164,16 +263,29 @@ export class ClienteFacturarComponent implements OnInit, OnDestroy {
 
           this.resolveSelectedEmisor(id);
 
+          // ✅ aquí te enteras del cambio del switcher
+          this.loadSucursalesPorEmisor(id);
+          //merol
+          this.form.patchValue({ sucursalId: '', serie: '', folio: '' }, { emitEvent: false });
+          this.serieFolioWarning = null;
+
           // Si cambió y ya había uno seleccionado, limpia
           if (prevId && id && id !== prevId) {
             this.resetFormPorCambioEmisor();
           }
         });
+        this.resolveSelectedEmisor(this._emisorService.emisorId);
+        this.loadSucursalesPorEmisor(this._emisorService.emisorId);
+
+        //merol
+        this.form.patchValue({ sucursalId: '', serie: '', folio: '' }, { emitEvent: false });
+        this.serieFolioWarning = null;
       },
       error: () => {
         this.selectedEmisor = null;
       }
     });
+
   }
 
   private resolveSelectedEmisor(id: string | null): void {
@@ -187,8 +299,8 @@ export class ClienteFacturarComponent implements OnInit, OnDestroy {
   private resetFormPorCambioEmisor(): void {
     // Limpia form con defaults
     this.form.reset({
-      serie: 'a',
-      folio: '1',
+      serie: '',
+      folio: '',
       fecha: new Date(),
       usoCfdi: '',
       formaPago: '',
@@ -367,6 +479,12 @@ export class ClienteFacturarComponent implements OnInit, OnDestroy {
   emitir(): void {
     // ✅ valida emisor
     const emisorId = this._emisorService.emisorId;
+    const sucursalId = this.form.value.sucursalId;
+    if (!sucursalId) {
+      this._snackBar.open('Selecciona una sucursal para emitir.', 'OK', { duration: 3500 });
+      return;
+    }
+
     if (!emisorId) {
       this._snackBar.open('Selecciona un emisor antes de emitir.', 'OK', { duration: 3500 });
       return;
@@ -414,6 +532,8 @@ export class ClienteFacturarComponent implements OnInit, OnDestroy {
 
     const payload = {
       razonSocialId: emisorId,
+      sucursalId: sucursalId,
+      tipoFactura: this.form.value.tipoIngreso,
       clienteId: this.clienteId,
       serie: this.form.value.serie || null,
       folio: this.form.value.folio || null,

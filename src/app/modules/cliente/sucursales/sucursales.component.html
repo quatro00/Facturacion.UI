@@ -1,0 +1,227 @@
+<div class="flex w-full flex-auto flex-col">
+
+  <!-- Header -->
+  <div class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
+
+    <!-- Loader -->
+    @if (isLoading) {
+      <div class="absolute inset-x-0 bottom-0">
+        <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+      </div>
+    }
+
+    <!-- Title -->
+    <div>
+      <h2 class="text-3xl font-semibold leading-8 tracking-tight">
+        Sucursales
+      </h2>
+      <div class="text-secondary font-medium tracking-tight">
+        Administra tus sucursales y su relación con tus razones sociales.
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-6 flex shrink-0 items-center gap-3 sm:ml-4 sm:mt-0">
+
+      <!-- Quick Search (opcional; si ya buscas en filtros, puedes quitar este bloque) -->
+      <!--
+      <mat-form-field class="fuse-mat-dense fuse-mat-rounded min-w-64" [subscriptSizing]="'dynamic'">
+        <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+        <input matInput [autocomplete]="'off'" [placeholder]="'Buscar (Código, Nombre)'" formControlName="q" />
+      </mat-form-field>
+      -->
+
+      <!-- Add -->
+      <button mat-flat-button color="accent" (click)="nuevaSucursal()">
+        <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+        <span class="ml-2 mr-1">Nueva sucursal</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="mx-auto w-full max-w-screen-xl px-3 pt-4">
+    <div class="bg-card rounded-2xl shadow p-4">
+
+      <!-- ✅ formGroup en el contenedor -->
+      <form [formGroup]="filtersForm">
+        <div class="grid grid-cols-12 gap-4">
+
+          <!-- Buscar -->
+          <mat-form-field class="col-span-12 sm:col-span-4" appearance="fill">
+            <mat-label>Buscar</mat-label>
+            <input matInput placeholder="Código o nombre" formControlName="q">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <!-- Estatus -->
+          <mat-form-field class="col-span-12 sm:col-span-3" appearance="fill">
+            <mat-label>Estatus</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="ALL">Todas</mat-option>
+              <mat-option value="ACTIVE">Activas</mat-option>
+              <mat-option value="INACTIVE">Inactivas</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Razón Social -->
+          <mat-form-field class="col-span-12 sm:col-span-5" appearance="fill">
+            <mat-label>Razón social</mat-label>
+            <mat-select formControlName="razonSocialId">
+              <mat-option [value]="'ALL'">Todas</mat-option>
+              <mat-option *ngFor="let rs of razonesOptions" [value]="rs.id">
+                {{ rs.razonSocial }} ({{ rs.rfc }})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+        </div>
+
+        <div class="flex justify-end gap-3 mt-2">
+          <button mat-stroked-button type="button" (click)="limpiarFiltros()">
+            Limpiar filtros
+          </button>
+          <!-- Si después quieres botón aplicar "manual", aquí lo agregas -->
+          <!-- <button mat-flat-button color="accent" type="button" (click)="applyFilters()">Aplicar</button> -->
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="mx-auto flex w-full max-w-screen-xl flex-wrap p-3">
+    <div class="mt-8 grid w-full grid-cols-1 gap-8 xl:grid-cols-1" style="margin-top: 0px !important;">
+      <div class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl shadow xl:col-span-2">
+
+        <div class="mx-6 overflow-x-auto">
+
+          <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1 w-full table-fixed">
+
+            <!-- Código -->
+            <ng-container matColumnDef="codigo">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header class="w-32">Código</th>
+              <td mat-cell *matCellDef="let row" class="font-medium">
+                {{ row.codigo }}
+              </td>
+            </ng-container>
+
+            <!-- Nombre -->
+            <ng-container matColumnDef="nombre">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+              <td mat-cell *matCellDef="let row" class="whitespace-nowrap">
+                <div class="flex flex-col">
+                  <span class="font-medium truncate max-w-[420px]">{{ row.nombre }}</span>
+                  <span class="text-secondary text-sm truncate max-w-[420px]">
+                    {{ formatUbicacion(row) }}
+                  </span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Razones -->
+            <ng-container matColumnDef="razones">
+  <th mat-header-cell *matHeaderCellDef class="w-[360px]">
+    Razón social
+  </th>
+
+  <td mat-cell *matCellDef="let row">
+
+    <div class="flex flex-wrap gap-2">
+
+      <!-- Sin razones -->
+      <ng-container *ngIf="!row.razonesSociales || row.razonesSociales.length === 0">
+        <span class="text-secondary text-sm">—</span>
+      </ng-container>
+
+      <!-- Chips -->
+      <mat-chip
+        *ngFor="let r of row.razonesSociales"
+        [color]="r.esDefault ? 'primary' : undefined"
+        [selected]="r.esDefault"
+        class="text-xs">
+
+        <span class="font-medium">
+          {{ r.razonSocial }}
+        </span>
+
+        <span class="ml-1 text-[10px] opacity-70">
+          ({{ r.rfc }})
+        </span>
+
+        <span *ngIf="r.esDefault"
+        class="ml-2 px-2 py-[2px] text-[10px] rounded-full bg-primary-100 text-primary-700">
+    Default
+  </span>
+      </mat-chip>
+
+    </div>
+
+  </td>
+</ng-container>
+
+            <!-- Estatus -->
+            <ng-container matColumnDef="estatus">
+              <th mat-header-cell *matHeaderCellDef class="w-32">Estatus</th>
+              <td mat-cell *matCellDef="let row">
+                <mat-chip [ngClass]="getStatusChipClass(row)" selected>
+                  {{ getStatusLabel(row) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Acciones -->
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef class="w-40 text-center">Acciones</th>
+              <td mat-cell *matCellDef="let row" class="text-center">
+
+                <!-- Ver -->
+                <button mat-icon-button matTooltip="Ver detalle" (click)="verDetalle(row)">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+
+                <!-- Editar -->
+                <button mat-icon-button matTooltip="Editar" (click)="editar(row)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+
+                <!-- Menú -->
+                <button mat-icon-button [matMenuTriggerFor]="menuRow" matTooltip="Más acciones">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+
+                <mat-menu #menuRow="matMenu">
+                  <button mat-menu-item (click)="editar(row)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Editar sucursal</span>
+                  </button>
+
+                  <button mat-menu-item (click)="toggleActivo(row)">
+                    <mat-icon>{{ row.activo ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+                    <span>{{ row.activo ? 'Desactivar' : 'Activar' }}</span>
+                  </button>
+                </mat-menu>
+
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+          </table>
+
+          <!-- Empty state -->
+          <div *ngIf="!isLoading && dataSource.data.length === 0" class="p-6 text-center text-secondary">
+            No hay sucursales para mostrar.
+          </div>
+
+          <mat-paginator [pageSizeOptions]="[10, 25, 50]" [pageSize]="10" showFirstLastButtons>
+          </mat-paginator>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
