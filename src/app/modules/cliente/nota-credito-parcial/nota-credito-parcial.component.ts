@@ -211,10 +211,7 @@ export class NotaCreditoParcialComponent {
     this.isSaving = true;
 
     // ✅ Método nuevo en Cliente_Factura (te lo dejo abajo)
-    this.facturasService.crearNotaCreditoParcial(this.cfdi.id, emisorId, {
-      motive: this.motivoCtrl.value,
-      conceptos
-    })
+    this.facturasService.crearNotaCreditoParcial(this.cfdi.id, conceptos)
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
         next: (res: CfdiCreadoDto) => {
@@ -225,7 +222,7 @@ export class NotaCreditoParcialComponent {
           );
 
           // Opcional: regresar al detalle del CFDI origen o a listado
-          this.router.navigate(['/admin/facturacion/cfdis', this.cfdi!.id]);
+          this.router.navigate(['/cliente/facturas']);
         },
         error: (err) => {
           console.error(err);

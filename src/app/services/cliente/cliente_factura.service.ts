@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { connect, Observable } from 'rxjs';
 import { environment } from 'environments/environment';
 import { CfdiDetalleDto } from 'app/shared/models/cliente_facturacion/CfdiDetalleDto';
 import { CfdiCreadoDto, CrearNcParcialRequest } from 'app/shared/models/cliente_facturacion/facturacion.models';
@@ -97,26 +97,29 @@ export class Cliente_Factura {
   }
 
   crearNotaCreditoTotal(cfdiId: string, razonSocialId: string | null): Observable<CfdiCreadoDto> {
-  return this.http.post<CfdiCreadoDto>(
-    `${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/notas-credito/total`,{ razonSocialId }
-  );
-}
+    return this.http.post<CfdiCreadoDto>(
+      `${environment.apiUrl}/${this.service}/${encodeURIComponent(cfdiId)}/notas-credito/total`, { razonSocialId }
+    );
+  }
 
-crearNotaCreditoParcial(cfdiId: string, emisorId: string, body: CrearNcParcialRequest): Observable<CfdiCreadoDto> {
-  // Ajusta tu ruta real. Ejemplos:
-  // return this.http.post<CfdiCreadoDto>(`${this.baseUrl}/cfdis/${cfdiId}/nota-credito/parcial?emisorId=${emisorId}`, body);
+  crearNotaCreditoParcial(cfdiId: string, conceptos: any): Observable<CfdiCreadoDto> {
+    // Ajusta tu ruta real. Ejemplos:
+    // return this.http.post<CfdiCreadoDto>(`${this.baseUrl}/cfdis/${cfdiId}/nota-credito/parcial?emisorId=${emisorId}`, body);
 
-  return this.http.post<CfdiCreadoDto>(
-    `${environment.apiUrl}/${this.service}/${cfdiId}/NotaCreditoParcial`,
-    { emisorId, ...body }
-  );
-}
+    return this.http.post<CfdiCreadoDto>(
+      `${environment.apiUrl}/${this.service}/CrearNotaCreditoDevolucion`,
+      { 
+        cfdiId:cfdiId,
+        conceptos:conceptos
+      }
+    );
+  }
 
-crearNotaCreditoParcialMonto(cfdiId: string, emisorId: string, monto: number) {
-  return this.http.post<CfdiCreadoDto>(`${environment.apiUrl}/${this.service}/CrearNotaCreditoParcialMonto`, {
-    cfdiId,
-    emisorId,
-    monto
-  });
-}
+  crearNotaCreditoParcialMonto(cfdiId: string, emisorId: string, monto: number) {
+    return this.http.post<CfdiCreadoDto>(`${environment.apiUrl}/${this.service}/notas-credito/parcial-monto`, {
+      cfdiOrigenId: cfdiId,
+      monto: monto
+    });
+  }
+
 }
