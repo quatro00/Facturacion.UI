@@ -37,6 +37,7 @@
   </div>
 
   <!-- KPIs -->
+
   <div class="kpi-grid">
     <mat-card class="kpi-card" *ngFor="let k of kpis">
       <div class="kpi-top">
@@ -79,17 +80,18 @@
   <div class="content-grid">
 
     <!-- Facturación 12 meses -->
-    <mat-card class="panel">
+    <mat-card class="panel"  *ngIf="facturacion12m">
       <div class="panel-head">
         <div>
           <div class="panel-title">Facturación últimos 12 meses</div>
           <div class="panel-subtitle">Montos timbrados (dummy)</div>
         </div>
-
+        <!--
         <button mat-stroked-button type="button">
           <mat-icon>insights</mat-icon>
           Ver reporte
         </button>
+        -->
       </div>
 
       <div class="bars">
@@ -124,7 +126,7 @@
     </mat-card>
 
     <!-- Distribución por estatus -->
-    <mat-card class="panel">
+    <mat-card class="panel" *ngIf="statusSlices">
       <div class="panel-head">
         <div>
           <div class="panel-title">Estatus de CFDIs</div>
@@ -136,7 +138,7 @@
         </button>
       </div>
 
-      <div class="status-wrap">
+      <div class="status-wrap" >
         <div class="donut" [style.background]="donutStyle">
           <div class="donut-hole">
             <div class="donut-big">{{ statusSlices[0].value }}%</div>
@@ -163,22 +165,23 @@
     </mat-card>
 
     <!-- CFDIs recientes -->
-    <mat-card class="panel span-2">
+    <mat-card class="panel span-2" *ngIf="recentCfdis">
       <div class="panel-head">
         <div>
           <div class="panel-title">CFDIs recientes</div>
           <div class="panel-subtitle">Últimos movimientos (dummy)</div>
         </div>
-
+        
         <div class="flex gap-2">
           <button mat-stroked-button type="button">
-            <mat-icon>download</mat-icon>
-            Exportar
+            <mat-icon>search</mat-icon>
+            Ver Cfdis
           </button>
+          <!--
           <button mat-flat-button color="primary" type="button">
             <mat-icon>search</mat-icon>
             Buscar
-          </button>
+          </button>-->
         </div>
       </div>
 
@@ -246,7 +249,7 @@
     </mat-card>
 
     <!-- Top clientes -->
-    <mat-card class="panel">
+    <mat-card class="panel"  *ngIf="topClients">
       <div class="panel-head">
         <div>
           <div class="panel-title">Top clientes</div>
@@ -272,7 +275,7 @@
     </mat-card>
 
     <!-- Alertas -->
-    <mat-card class="panel">
+    <mat-card class="panel"  *ngIf="alerts">
       <div class="panel-head">
         <div>
           <div class="panel-title">Alertas</div>

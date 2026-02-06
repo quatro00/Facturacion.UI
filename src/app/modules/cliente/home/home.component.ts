@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +9,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Cliente_Dashboard } from 'app/services/cliente/cliente_dashboard.service';
 
 type CfdiStatus = 'TIMBRADO' | 'CANCELADO' | 'BORRADOR' | 'ERROR';
 
@@ -73,147 +74,74 @@ interface TopClientRow {
   styleUrls: ['./home.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
 
   // Header
   periodoLabel = 'Últimos 30 días';
   lastSync = new Date();
+  isLoading = false;
+
+  constructor(private dashboardService: Cliente_Dashboard, private cdr: ChangeDetectorRef) { }
+
+  loadDashboard(): void {
+    this.isLoading = true;
+    const now = new Date();
+    const desde = new Date();
+    desde.setDate(now.getDate() - 30);
+
+    const payload = {
+      desde: desde.toISOString(),
+      hasta: now.toISOString(),
+      moneda: 'MXN',
+      takeRecientes: 10,
+      takeTopClientes: 5,
+      mesesHistorico: 12
+    };
+
+    this.dashboardService.getDashboard(payload)
+      .subscribe({
+        next: (res) => {
+          this.kpis = res.kpis ?? [];
+          this.facturacion12m = res.facturacion12m ?? [];
+          this.statusSlices = res.statusSlices ?? [];
+          this.recentCfdis = res.recentCfdis ?? [];
+          this.topClients = res.topClients ?? [];
+          this.alerts = res.alerts ?? [];
+          this.lastSync = new Date();
+          this.isLoading = false;
+
+          this.cdr.markForCheck(); // ✅
+        },
+        error: (err) => {
+          console.error('Error cargando dashboard', err);
+          this.isLoading = false;
+          this.cdr.markForCheck(); // ✅
+        }
+      });
+  }
+
+  ngOnInit(): void {
+    this.loadDashboard();
+  }
 
   // KPIs (dummy)
-  kpis: Kpi[] = [
-    {
-      title: 'Facturado (MXN)',
-      value: '$1,284,550.00',
-      hint: 'Total timbrado en el periodo seleccionado',
-      trend: { direction: 'up', value: '+12.4%', note: 'vs. periodo anterior' },
-      icon: 'paid'
-    },
-    {
-      title: 'CFDIs emitidos',
-      value: '1,248',
-      hint: 'Incluye ingreso, egreso y pagos',
-      trend: { direction: 'up', value: '+4.1%', note: 'vs. periodo anterior' },
-      icon: 'receipt_long'
-    },
-    {
-      title: 'Cancelaciones',
-      value: '18',
-      hint: 'CFDIs cancelados en el periodo',
-      trend: { direction: 'down', value: '-2.0%', note: 'vs. periodo anterior' },
-      icon: 'block'
-    },
-    {
-      title: 'Notas de crédito',
-      value: '42',
-      hint: 'Total de egresos (NC) emitidas',
-      trend: { direction: 'up', value: '+9.5%', note: 'vs. periodo anterior' },
-      icon: 'note_alt'
-    }
-  ];
+  kpis: Kpi[];
 
   // Gráfica barras (dummy) - últimos 12 meses
-  facturacion12m: MonthlyPoint[] = [
-    { label: 'Feb', amount: 820000 },
-    { label: 'Mar', amount: 910000 },
-    { label: 'Abr', amount: 760000 },
-    { label: 'May', amount: 980000 },
-    { label: 'Jun', amount: 1120000 },
-    { label: 'Jul', amount: 1050000 },
-    { label: 'Ago', amount: 990000 },
-    { label: 'Sep', amount: 1210000 },
-    { label: 'Oct', amount: 1320000 },
-    { label: 'Nov', amount: 1280000 },
-    { label: 'Dic', amount: 1490000 },
-    { label: 'Ene', amount: 1380000 },
-  ];
+  facturacion12m: MonthlyPoint[];
 
   // Donut estatus (dummy)
-  statusSlices: StatusSlice[] = [
-    { status: 'TIMBRADO', label: 'Timbrado', value: 86 },
-    { status: 'CANCELADO', label: 'Cancelado', value: 6 },
-    { status: 'BORRADOR', label: 'Borrador', value: 5 },
-    { status: 'ERROR', label: 'Error', value: 3 }
-  ];
+  statusSlices: StatusSlice[];
 
   // Tabla CFDIs recientes (dummy)
   recentDisplayedColumns = ['fecha', 'folio', 'receptor', 'total', 'estatus', 'acciones'];
-  recentCfdis: RecentCfdiRow[] = [
-    {
-      id: '1',
-      uuid: '3F9A9D3B-1A25-4D8A-9E2D-8A5B77C0A111',
-      fecha: new Date(Date.now() - 1000 * 60 * 60 * 5),
-      serie: 'A',
-      folio: '10293',
-      receptor: 'Restaurantes del Norte SA de CV',
-      rfc: 'RNN010203AB1',
-      total: 2850.00,
-      moneda: 'MXN',
-      estatus: 'TIMBRADO'
-    },
-    {
-      id: '2',
-      uuid: '0B11C6F4-5D7F-4A12-A1A2-9D5B16D0B222',
-      fecha: new Date(Date.now() - 1000 * 60 * 60 * 9),
-      serie: 'A',
-      folio: '10292',
-      receptor: 'Comercializadora La Esquina',
-      rfc: 'CLE9201013A9',
-      total: 17950.45,
-      moneda: 'MXN',
-      estatus: 'TIMBRADO'
-    },
-    {
-      id: '3',
-      uuid: 'D7D0B322-7A13-4B17-8CF9-6A51E8BB0333',
-      fecha: new Date(Date.now() - 1000 * 60 * 60 * 18),
-      serie: 'NC',
-      folio: '00041',
-      receptor: 'Servicios Industriales Orion',
-      rfc: 'SIO050505KJ2',
-      total: 1250.00,
-      moneda: 'MXN',
-      estatus: 'CANCELADO'
-    },
-    {
-      id: '4',
-      uuid: 'A3B2C111-ABCD-4F0F-9EE1-001122334444',
-      fecha: new Date(Date.now() - 1000 * 60 * 60 * 22),
-      serie: 'A',
-      folio: '10291',
-      receptor: 'Cliente Demo (Sandbox)',
-      rfc: 'XAXX010101000',
-      total: 999.99,
-      moneda: 'MXN',
-      estatus: 'ERROR'
-    },
-    {
-      id: '5',
-      uuid: 'F0F0F0F0-1D1D-2C2C-3B3B-4A4A4A4A5555',
-      fecha: new Date(Date.now() - 1000 * 60 * 60 * 30),
-      serie: 'A',
-      folio: '10290',
-      receptor: 'Distribuidora Central',
-      rfc: 'DCE991010AB3',
-      total: 54230.10,
-      moneda: 'MXN',
-      estatus: 'BORRADOR'
-    }
-  ];
+  recentCfdis: RecentCfdiRow[];
 
   // Top clientes (dummy)
-  topClients: TopClientRow[] = [
-    { nombre: 'Restaurantes del Norte SA de CV', rfc: 'RNN010203AB1', facturas: 132, total: 412550.12 },
-    { nombre: 'Distribuidora Central', rfc: 'DCE991010AB3', facturas: 87, total: 365230.45 },
-    { nombre: 'Servicios Industriales Orion', rfc: 'SIO050505KJ2', facturas: 64, total: 248120.00 },
-    { nombre: 'Comercializadora La Esquina', rfc: 'CLE9201013A9', facturas: 59, total: 199880.80 },
-  ];
+  topClients: TopClientRow[];
 
   // Alertas (dummy)
-  alerts = [
-    { icon: 'warning', title: 'Certificados próximos a vencer', desc: '1 razón social con CSD a < 30 días.' },
-    { icon: 'sync_problem', title: 'Última sincronización fallida', desc: 'Reintenta la descarga masiva de CFDIs.' },
-    { icon: 'info', title: 'Revisión de cancelaciones', desc: 'Hay 3 solicitudes pendientes de confirmación.' },
-  ];
+  alerts;
 
   // Helpers para barras
   get maxMonthlyAmount(): number {
