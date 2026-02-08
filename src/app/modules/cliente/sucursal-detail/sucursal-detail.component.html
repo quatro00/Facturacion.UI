@@ -124,7 +124,7 @@
       <div class="rounded-2xl border bg-white p-6 shadow-sm lg:col-span-2">
         <div class="flex items-center justify-between">
           <div class="text-lg font-semibold">Razones sociales asociadas</div>
-          <div class="text-sm text-secondary">Selecciona y marca “default” si aplica</div>
+          <div class="text-sm text-secondary">Selecciona y marca Matriz si aplica</div>
         </div>
 
         @if (!razonesSociales?.length) {
@@ -148,7 +148,7 @@
                 </div>
 
                 <div class="mt-3 flex items-center justify-between">
-                  <span class="text-sm text-secondary">Default</span>
+                  <span class="text-sm text-secondary">Matriz</span>
                   <mat-checkbox
                     [disabled]="!isEditMode || !isRsSelected(rs.id)"
                     [checked]="defaultRsMap[rs.id]"

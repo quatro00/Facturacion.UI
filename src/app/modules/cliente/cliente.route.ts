@@ -19,6 +19,7 @@ export default [
         path: '',
         children: [
             { path: 'home', component: HomeComponent },
+            { path: 'home', component: HomeComponent },
             { path: 'perfil', component: PerfilComponent },
             { path: 'sucursales', component: SucursalesComponent },
 

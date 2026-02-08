@@ -41,6 +41,7 @@ export class EmisorSwitcherComponent implements OnInit {
     // OJO: asegúrate que este endpoint exista y regrese lista
     this._perfil.GetRazonesSociales().subscribe({
       next: (list) => {
+        console.log('Razones sociales!', list);
         this.emisores = (list || []).filter((x: any) => x.activo !== false);
 
         // Si NO hay emisor seleccionado, toma default o el primero

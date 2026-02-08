@@ -16,7 +16,8 @@
 
       <mat-option *ngFor="let e of emisores" [value]="e.id">
         <span class="block truncate text-sm">
-          {{ e.rfc }} – {{ e.razonSocial }}
+          {{ e.rfc }} – {{ e.razonSocial }}<br>
+          {{ e.regimenFiscalCodigo }} {{ e.regimenFiscal }}
         </span>
       </mat-option>
 

@@ -1,7 +1,7 @@
 {
     "name": "fuse-angular",
     "version": "21.0.0",
-    "description": "Fuse - Angular Admin Template and Starter Project",
+    "description": "Portalito MX: portal de facturación electrónica CFDI 4.0. Emite y administra facturas, notas de crédito, clientes y descargas de XML/PDF de forma segura.",
     "author": "https://themeforest.net/user/srcn",
     "license": "https://themeforest.net/licenses/standard",
     "private": true,
